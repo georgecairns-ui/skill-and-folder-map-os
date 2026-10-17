@@ -1,0 +1,10 @@
+{
+  "tools": [
+    {
+      "id": "skill-map",
+      "name": "Skill Map OS",
+      "app": "apps/skill-map/",
+      "dataFiles": ["apps/skill-map/data/skillmap.json"]
+    }
+  ]
+}

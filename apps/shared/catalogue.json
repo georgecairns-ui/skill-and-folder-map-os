@@ -1,0 +1,83 @@
+{
+  "catalogueVersion": 1,
+  "tools": [
+    {
+      "id": "task-list",
+      "name": "Task List OS",
+      "description": "The task list that does itself. Claude sorts your inbox, calls and brain dump into tasks with drafts and times, and every other tool's actions land here for you to approve.",
+      "icon": "checkSquare",
+      "app": "apps/task-list/",
+      "repository": "task-list-os"
+    },
+    {
+      "id": "pipeline",
+      "name": "Pipeline OS",
+      "description": "The pipeline that chases itself, with every deal on one board by stage. Claude spots the chases that are due and drafts each follow-up in your voice, ready for you to send.",
+      "icon": "trendingUp",
+      "app": "apps/pipeline/",
+      "repository": "pipeline-os"
+    },
+    {
+      "id": "skill-map",
+      "name": "Skill Map OS",
+      "description": "See every skill Claude has, drawn as one map. It shows which ones you use, which are doubled up, and which parts of your business have none yet.",
+      "icon": "map",
+      "app": "apps/skill-map/",
+      "repository": "skill-map-os"
+    },
+    {
+      "id": "proposals",
+      "name": "Proposal Writer OS",
+      "description": "Paste your notes from a call and get a proposal in your brand. Claude writes it in your words and your prices, and you check it before it goes anywhere.",
+      "icon": "fileText",
+      "app": "apps/proposals/",
+      "repository": "proposal-writer-os"
+    },
+    {
+      "id": "content",
+      "name": "Content Machine OS",
+      "description": "A week of posts planned and drafted in your voice. Claude turns your wins, ideas and news into posts, and you approve each one before you post it yourself.",
+      "icon": "megaphone",
+      "app": "apps/content/",
+      "repository": "content-machine-os"
+    },
+    {
+      "id": "money",
+      "name": "Money View OS",
+      "description": "Cash today and the next 12 weeks, with what's owed to you. It reads your accounts so you can see a tight week coming and chase the right invoices in time.",
+      "icon": "wallet",
+      "app": "apps/money/",
+      "repository": "money-view-os"
+    },
+    {
+      "id": "file-finder",
+      "name": "File Finder OS",
+      "description": "Find any document in seconds by asking for it in plain words. Claude also suggests tidy-ups for your folders, and you approve each one with a click.",
+      "icon": "folder",
+      "app": "apps/file-finder/",
+      "repository": "file-finder-os"
+    },
+    {
+      "id": "whats-new",
+      "name": "What's New in Claude OS",
+      "description": "Claude's latest updates, translated into what they mean for your business. Each one comes with a plain suggestion of what to try, so you never miss something useful.",
+      "icon": "newspaper",
+      "app": "apps/whats-new/",
+      "repository": "whats-new-in-claude-os"
+    },
+    {
+      "id": "ads",
+      "name": "Ads Dashboard OS",
+      "description": "Your Google and Meta ads on one plain-English screen. See what each pound brings in and approve the changes Claude suggests before anything is touched.",
+      "icon": "barChart",
+      "app": "apps/ads/",
+      "repository": "ads-dashboard-os"
+    }
+  ],
+  "booking": {
+    "url": "https://calendly.com/d/d2bq-8jx-r39/claudit-audit",
+    "button": "Book a free call",
+    "line": "Get AI Powers sets this up with you on a free call.",
+    "showMoreTools": true
+  }
+}

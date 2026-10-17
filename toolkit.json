@@ -1,0 +1,30 @@
+{
+  "id": "skill-map",
+  "name": "Skill Map OS",
+  "version": "1.0.0",
+  "sharedVersion": "6",
+  "attachingVersion": "1",
+  "app": "apps/skill-map/",
+  "dataFiles": [
+    "apps/skill-map/data/skillmap.json"
+  ],
+  "skills": [
+    "scan-my-skills",
+    "group-my-skills",
+    "review-my-skills"
+  ],
+  "setupSteps": [
+    "setup/skill-map-01-first-scan.md",
+    "setup/skill-map-02-group-by-business.md"
+  ],
+  "contextFiles": [],
+  "connections": [],
+  "claudeSection": "apps/skill-map/ATTACH-CLAUDE.md",
+  "reads": [],
+  "sends": [
+    {
+      "to": "task-list",
+      "what": "suggested tasks to tidy skills (retire one, fix a duplicate) and to build a first skill for an empty area"
+    }
+  ]
+}

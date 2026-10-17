@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(./**)",
+      "Edit(./apps/skill-map/data/**)",
+      "Write(./apps/skill-map/data/**)",
+      "Write(./apps/home/data/**)",
+      "Edit(./apps/home/data/**)",
+      "Edit(./context/**)",
+      "Write(./context/**)",
+      "Edit(./files/**)",
+      "Write(./files/**)",
+      "Edit(./setup/progress.md)",
+      "WebSearch",
+      "Bash(node apps/skill-map/scan/scan.js)",
+      "Bash(node apps/skill-map/scan/scan.js --dry-run)",
+      "Bash(node apps/skill-map/scan/scan.js --no-usage)",
+      "Bash(python3 apps/skill-map/scan/scan.py)",
+      "Bash(python3 apps/skill-map/scan/scan.py --dry-run)",
+      "Bash(python3 apps/skill-map/scan/scan.py --no-usage)",
+      "Bash(python apps/skill-map/scan/scan.py)",
+      "Bash(bash setup/scripts/start-task-list.sh)",
+      "Bash(powershell -ExecutionPolicy Bypass -File setup\\scripts\\start-task-list.ps1)"
+    ]
+  }
+}

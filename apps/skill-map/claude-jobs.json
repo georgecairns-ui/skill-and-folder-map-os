@@ -1,0 +1,17 @@
+{
+  "about": "Jobs the app can ask Claude to do straight away, through the helper (apps/server). The app sends only the job's name; these words are what Claude follows. See maintainers/SHARED-V4-CHANGES.md.",
+  "jobs": {
+    "scan-my-skills": {
+      "label": "scanning your skills",
+      "prompt": "The person has pressed Scan in Skill Map OS. Follow .claude/skills/scan-my-skills: run the scan script (node apps/skill-map/scan/scan.js, or python3 apps/skill-map/scan/scan.py if Node isn't installed) once, then stop. Change nothing else."
+    },
+    "group-my-skills": {
+      "label": "grouping your skills by what they do",
+      "prompt": "The person has pressed Group in Skill Map OS. Follow .claude/skills/group-my-skills for every skill in apps/skill-map/data/skillmap.json that isn't in an area yet. Read context/business.md first if it exists. Change nothing else."
+    },
+    "review-my-skills": {
+      "label": "reviewing your skills",
+      "prompt": "The person has pressed Review in Skill Map OS. Follow .claude/skills/review-my-skills: read apps/skill-map/data/skillmap.json and add suggestions to its recommendations list. Only suggest: never edit, move or delete a skill. Change nothing else."
+    }
+  }
+}
