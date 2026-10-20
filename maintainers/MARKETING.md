@@ -2,7 +2,7 @@
 
 ## In one sentence
 
-See every skill and every folder you have, mapped as 2 glowing maps, and what to tidy first.
+See every skill and every folder you have, mapped as 2 maps you can spin in 3D, and what to tidy first.
 
 ## Before and after, for the owner
 
@@ -14,6 +14,6 @@ Time saved: to check. Do not quote a figure until it has been measured with real
 
 ## 3 things to show in a 60-second video
 
-1. **The glowing map growing in.** A fresh scan, and the dots and hubs build outward from the centre on the dark, glowing stage.
+1. **The map growing in, then turning.** A fresh scan, and the dots and hubs build outward from the centre in 3D. Drag to spin it. The skills map is soft pastel, the folder map is vibrant and glowing.
 2. **Clicking down through folders to a single file.** Click a hub to go into a folder, again to go deeper, then click a file to see its folder, size and last change.
 3. **The Clean-up page.** The list of what needs tidying, biggest first, each with "See them" and "Find on the map".

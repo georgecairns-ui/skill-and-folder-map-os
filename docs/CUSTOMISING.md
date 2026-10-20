@@ -34,7 +34,7 @@ If Get AI Powers builds a version of the toolkit for your business or your clien
 
 ## Notes for Claude
 
-- The map itself is always drawn dark and glowing (a neon network with pulses and rotating rings), on both the Skills and the Files side, whichever theme the rest of the app is in. That's by design: don't change it when matching their brand. The rest of the app follows `apps/shared/theme.css` and `.claude/skills/match-my-brand` as normal.
+- The map itself is 3D and keeps its own look whichever theme the rest of the app is in: soft pastel tones on the Skills side, a vibrant glowing look on the Files side. That's by design: don't change it when matching their brand. The rest of the app follows `apps/shared/theme.css` and `.claude/skills/match-my-brand` as normal.
 - Change colours only through the variables in `apps/shared/theme.css`, in both the light and the dark set (or follow `.claude/skills/match-my-brand`). Keep text dark enough on the background to read easily: aim for a contrast ratio of at least 4.5 to 1 for normal text. If a brand colour is too light for buttons, use a darker shade of it for buttons and keep the original for decoration.
 - Fonts must be files inside `apps/shared/fonts/` (the app works without internet). If the person wants a font you can't add as a file, use the closest system font in the font list instead and tell them.
 - After any change, ask them to reload the app and check it looks right.

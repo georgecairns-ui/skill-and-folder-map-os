@@ -463,3 +463,24 @@ body.has-drawer .map-hint { display: none; }
   .save-status { display: none; }
   .lens button { padding: 0 9px; }
 }
+
+
+/* ============================================================
+   The skill map is soft and pastel; the folder map stays vibrant
+   ============================================================ */
+.map-stage[data-style="pastel"] .map-view { background: var(--color-bg); }
+.map-stage[data-style="pastel"] .map-legend { border-right: 1px solid var(--color-line); background: var(--color-sidebar); color: var(--color-ink-soft); }
+.map-stage[data-style="pastel"] .map-legend__item { color: var(--color-ink); }
+.map-stage[data-style="pastel"] .map-legend__item:hover:not(:disabled) { background: var(--color-sunk); }
+.map-stage[data-style="pastel"] .map-legend__n { color: var(--color-muted); }
+.map-stage[data-style="pastel"] .map-legend__key { border-top-color: var(--color-line); color: var(--color-muted); }
+.map-stage[data-style="pastel"] .map-legend__title { color: var(--color-muted); }
+.map-stage[data-style="pastel"] .map-legend__dot { box-shadow: none; }
+.map-stage[data-style="pastel"] .map-hud { color: var(--color-muted); }
+.map-stage[data-style="pastel"] .map-hud b { color: var(--color-ink); text-shadow: none; }
+.map-stage[data-style="pastel"] .map-view::before, .map-stage[data-style="pastel"] .map-view::after { border-color: var(--color-line-strong); }
+.map-stage[data-style="pastel"] .map-hint { background: color-mix(in srgb, var(--color-surface) 88%, transparent); border-color: var(--color-line); color: var(--color-muted); }
+.map-canvas { cursor: grab; }
+@media (max-width: 1000px) { .map-stage[data-style="neon"] .map-legend { border-top-color: #16213a; } .map-stage[data-style="pastel"] .map-legend { border-top-color: var(--color-line); } }
+
+.map-stage { min-height: 460px; }

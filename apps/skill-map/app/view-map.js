@@ -79,12 +79,12 @@
         "</div>" +
       "</div>" +
       approvalBanner + groupNote +
-      '<div class="map-stage" id="mapStage">' +
+      '<div class="map-stage" id="mapStage" data-style="pastel">' +
         '<aside class="map-legend" id="mapLegend" aria-label="Groups and key"></aside>' +
         '<div class="map-view" id="mapView">' +
           '<div class="map-hud" aria-hidden="true"><span>SKILLS <b class="num">' + n.total + '</b></span><span>LINKS <b class="num">' + n.links + '</b></span><span>IN USE <b class="num">' + n.used90 + "</b></span></div>" +
           '<div class="map-tip" id="mapTip" hidden></div>' +
-          '<div class="map-hint" aria-hidden="true">Scroll to zoom, drag to move, click a skill</div>' +
+          '<div class="map-hint" aria-hidden="true">Drag to turn it, scroll to zoom, click a skill</div>' +
         "</div>" +
       "</div>" +
     "</div>";
@@ -160,7 +160,7 @@
     if (sig !== signature) {
       const first = !signature || signature.split("|")[0] !== sig.split("|")[0];
       signature = sig;
-      engine.build(M.graph(c.d, mode(c)), { animate: first || !engine.has("core") });
+      engine.build(M.graph(c.d, mode(c)), { animate: first || !engine.has("core"), style: "pastel" });
     }
     engine.resize();
     engine.setFilter(passSet(c.d, c.state));
@@ -205,9 +205,9 @@
       '<div class="filters map-bar__filters" role="group" aria-label="Filters">' + typeChips + '<span class="map-bar__sep" aria-hidden="true"></span>' +
       '<button type="button" class="filter' + (st.fworth ? " is-active" : "") + '" data-action="fworth" aria-pressed="' + !!st.fworth + '">' + icon("alert") + "Worth a look" + (n.worth ? ' <span class="filter__n">' + n.worth + "</span>" : "") + "</button>" +
       (filtersOn ? '<button type="button" class="link-btn" data-action="fclear">Clear filters</button>' : "") + "</div></div>" +
-      '<div class="map-stage" id="mapStage"><aside class="map-legend" id="mapLegend" aria-label="Folders and key"></aside><div class="map-view" id="mapView">' +
+      '<div class="map-stage" id="mapStage" data-style="neon"><aside class="map-legend" id="mapLegend" aria-label="Folders and key"></aside><div class="map-view" id="mapView">' +
       '<div class="map-hud" aria-hidden="true"><span>FILES <b class="num">' + FMd.fmtCount(n.files) + '</b></span><span>FOLDERS <b class="num">' + FMd.fmtCount(n.folders) + '</b></span><span>SIZE <b class="num">' + esc(FMd.fmtBytes(n.bytes)) + "</b></span></div>" +
-      '<div class="map-tip" id="mapTip" hidden></div><div class="map-hint" aria-hidden="true">Click a folder to go in, click the middle to go back, click a file for details</div></div></div></div>';
+      '<div class="map-tip" id="mapTip" hidden></div><div class="map-hint" aria-hidden="true">Drag to turn it, scroll to zoom. Click a folder to go in, the middle to go back</div></div></div></div>';
   }
 
   function bindFiles(root, c) {
@@ -227,7 +227,7 @@
     stage.insertBefore(canvas, stage.firstChild);
     const sig = "f|" + (st.focus || "") + "|" + (st.ftype || "") + "|" + (st.fworth ? 1 : 0) + "|" + (st.pin || "") + "|" + (d.scan ? d.scan.at : "") + "|" + d.recommendations.length;
     const g = FMd.graph(d, st.focus, { type: st.ftype, worth: st.fworth, pin: st.pin });
-    if (sig !== signature) { signature = sig; engine.build(g, { animate: true }); }
+    if (sig !== signature) { signature = sig; engine.build(g, { animate: true, style: "neon" }); }
     engine.resize();
     engine.setFilter(null);
     engine.setShowLinks(st.links);

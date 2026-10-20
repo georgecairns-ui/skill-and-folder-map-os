@@ -164,9 +164,10 @@ Switch to the Files lens (the Skills | Files control in the top bar, or the `T` 
 
 ## 6. Light and dark, phone widths, reduced motion
 
-- **Light and dark app themes**: switch the app's own theme in the top bar. On the Skills and the Files lens alike, every panel, button and table takes the theme's colours; the map stage itself stays dark and glowing in both themes, matching the brief that the map is "always-dark" regardless of the app theme.
+- **3D map**: on both lenses, drag the map and it rotates; the wheel (or a pinch) zooms; it turns slowly by itself and stops while the pointer is over it; clicking a hub or a dot still opens the right side panel (a hub is not lost behind a small dot); Fit puts it back in view. The Skills map is pastel, the Files map is vibrant.
+- **Light and dark app themes**: switch the app's own theme in the top bar. On the Skills and the Files lens alike, every panel, button and table takes the theme's colours; the map stage keeps its own look in both themes (pastel dusk for skills, vibrant neon on dark for folders).
 - **Phone width 320 and 375**: on both lenses, the sidebar opens from the menu button, nothing scrolls sideways on any page (Map, All files/skills, Overview, Clean-up/Gaps, Review, Preferences), and the map stage still fits and is still usable by touch.
-- **Reduced motion**: with the OS's reduce-motion setting on, open the Map page on both lenses: the canvas must be completely still, no dots or hubs growing in, no comet-trail pulses, no rotating ring, no eased zoom or pan. The map still draws, still fits, and clicking, dragging and drilling in and out of folders still work.
+- **Reduced motion**: with the OS's reduce-motion setting on, open the Map page on both lenses: the canvas must be completely still, no dots or hubs growing in, no comet-trail pulses, no rotating ring, no automatic turning, no eased zoom or pan. The map still draws, still fits, and clicking, dragging and drilling in and out of folders still work.
 
 ## 7. The 5 jobs, with a stand-in `claude`
 

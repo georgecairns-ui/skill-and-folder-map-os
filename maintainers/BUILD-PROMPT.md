@@ -16,7 +16,7 @@ The tool actually built is a map of the skills and commands **already installed 
 
 ## Decisions made
 
-- **No libraries.** The map (`apps/skill-map/app/map.js`) is a hand-written force layout on a `<canvas>`. No d3, no 3D, no charting package, matching every other tool's "no framework, nothing from the internet" rule.
+- **No libraries.** The map (`apps/skill-map/app/map.js`) is a hand-written 3D map on a `<canvas>` (our own projection, drag to rotate, wheel to zoom). No d3, no three.js, no charting package, matching every other tool's "no framework, nothing from the internet" rule.
 - **The scan runs in both Node and Python** (`scan.js` and `scan.py`), writing byte-identical output, so the tool works whether the person's computer has Node, Python, or both, without the app itself depending on either.
 - **No changes to the shared helper for this tool.** The 3 Claude jobs (scan, group, review) use the job mechanism already built for Pipeline OS (`SHARED-V4-CHANGES.md`), so scans and suggestions can run as Claude jobs from a button press without any new shared code.
 - **Hours are never asked or invented.** Unlike the old business-task mapper, nothing in this tool asks how long a task takes or how much it hurts. The only numbers are counted from the scan itself: how many skills, how often each was used, when.
@@ -30,6 +30,6 @@ George's decisions for the second lens:
 - **The file map only looks at folders the person chooses**, set in setup and changed afterwards in Preferences. There is no scanning of the whole computer, and no default beyond `~/Documents`, `~/Desktop` and `~/Downloads` if they exist.
 - **Names, sizes and dates only, never contents.** The folder scan never opens a file or reads what's inside one, the same promise the skills scan already makes about skills.
 - **Duplicates are found by name and size.** 2 files count as the same if they share both; the tool never opens either to compare them further.
-- **The map area is dark and glowing in both themes.** Whichever theme the rest of the app is in, light or dark, the map canvas itself stays a dark, glowing, futuristic network; the rest of the app keeps the ordinary toolkit look.
+- **The maps are 3D and each lens has its own look.** The Skills map is soft and pastel; the Files map is vibrant and neon. Whichever theme the rest of the app is in, light or dark, the map canvas keeps its look; the rest of the app keeps the ordinary toolkit look.
 - **A Skills | Files switch** in the top bar (and the `T` key) moves the whole app between the 2 lenses; every page follows the switch.
 - **Recommendations on cleaning, for both skills and folders.** The existing `review-my-skills` job keeps suggesting what to do with skills; a new `review-my-folders` job does the equivalent for folders and files, on the same "only ever suggest" terms.
