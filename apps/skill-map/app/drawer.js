@@ -81,6 +81,8 @@
   }
 
   function render(c, which) {
+    if (which.kind === "file") return window.SM.fdrawer.file(c, which.id);
+    if (which.kind === "folder") return window.SM.fdrawer.folder(c, which.id);
     if (which.kind === "group") return group(c, which.id);
     return skill(c, which.id);
   }

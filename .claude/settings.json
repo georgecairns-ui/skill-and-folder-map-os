@@ -19,6 +19,11 @@
       "Bash(python3 apps/skill-map/scan/scan.py --dry-run)",
       "Bash(python3 apps/skill-map/scan/scan.py --no-usage)",
       "Bash(python apps/skill-map/scan/scan.py)",
+      "Bash(node apps/skill-map/scan/scan-files.js)",
+      "Bash(node apps/skill-map/scan/scan-files.js --dry-run)",
+      "Bash(python3 apps/skill-map/scan/scan-files.py)",
+      "Bash(python3 apps/skill-map/scan/scan-files.py --dry-run)",
+      "Bash(python apps/skill-map/scan/scan-files.py)",
       "Bash(bash setup/scripts/start-task-list.sh)",
       "Bash(powershell -ExecutionPolicy Bypass -File setup\\scripts\\start-task-list.ps1)"
     ]

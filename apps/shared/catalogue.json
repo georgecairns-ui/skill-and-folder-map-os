@@ -19,11 +19,11 @@
     },
     {
       "id": "skill-map",
-      "name": "Skill Map OS",
-      "description": "See every skill Claude has, drawn as one map. It shows which ones you use, which are doubled up, and which parts of your business have none yet.",
+      "name": "Skill and Folder Map OS",
+      "description": "See every skill Claude has and every folder and file you keep, drawn as two glowing maps. It shows what you use, what is doubled up, which parts of your business have no skill yet, and what to tidy first.",
       "icon": "map",
       "app": "apps/skill-map/",
-      "repository": "skill-map-os"
+      "repository": "skill-and-folder-map-os"
     },
     {
       "id": "proposals",

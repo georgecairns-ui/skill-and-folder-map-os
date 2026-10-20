@@ -2,7 +2,7 @@
 
 Status: not filled in yet
 
-<!-- Claude: fill this in during setup step 2 (setup/05-get-to-know-the-business.md), in the owner's own words. Review it from time to time and suggest changes; edit only after a yes. -->
+<!-- Claude: fill this in during setup step 3 (setup/05-get-to-know-the-business.md), in the owner's own words. Review it from time to time and suggest changes; edit only after a yes. -->
 
 ## The next 3 months
 

@@ -3,15 +3,23 @@
   "jobs": {
     "scan-my-skills": {
       "label": "scanning your skills",
-      "prompt": "The person has pressed Scan in Skill Map OS. Follow .claude/skills/scan-my-skills: run the scan script (node apps/skill-map/scan/scan.js, or python3 apps/skill-map/scan/scan.py if Node isn't installed) once, then stop. Change nothing else."
+      "prompt": "The person has pressed Scan in Skill and Folder Map OS. Follow .claude/skills/scan-my-skills: run the scan script (node apps/skill-map/scan/scan.js, or python3 apps/skill-map/scan/scan.py if Node isn't installed) once, then stop. Change nothing else."
     },
     "group-my-skills": {
       "label": "grouping your skills by what they do",
-      "prompt": "The person has pressed Group in Skill Map OS. Follow .claude/skills/group-my-skills for every skill in apps/skill-map/data/skillmap.json that isn't in an area yet. Read context/business.md first if it exists. Change nothing else."
+      "prompt": "The person has pressed Group in Skill and Folder Map OS. Follow .claude/skills/group-my-skills for every skill in apps/skill-map/data/skillmap.json that isn't in an area yet. Read context/business.md first if it exists. Change nothing else."
     },
     "review-my-skills": {
       "label": "reviewing your skills",
-      "prompt": "The person has pressed Review in Skill Map OS. Follow .claude/skills/review-my-skills: read apps/skill-map/data/skillmap.json and add suggestions to its recommendations list. Only suggest: never edit, move or delete a skill. Change nothing else."
+      "prompt": "The person has pressed Review in Skill and Folder Map OS. Follow .claude/skills/review-my-skills: read apps/skill-map/data/skillmap.json and add suggestions to its recommendations list. Only suggest: never edit, move or delete a skill. Change nothing else."
+    },
+    "scan-my-folders": {
+      "label": "looking through your folders",
+      "prompt": "The person has pressed Scan in the Folders map in Skill and Folder Map OS. Follow .claude/skills/scan-my-folders: run the folder scan script (node apps/skill-map/scan/scan-files.js, or python3 apps/skill-map/scan/scan-files.py if Node isn't installed) once, then stop. Change nothing else."
+    },
+    "review-my-folders": {
+      "label": "reviewing your folders",
+      "prompt": "The person has pressed Review in the Folders map in Skill and Folder Map OS. Follow .claude/skills/review-my-folders: read apps/skill-map/data/filemap.json and add suggestions to its recommendations list. Only suggest: never move, rename, edit or delete a file or folder. Change nothing else."
     }
   }
 }

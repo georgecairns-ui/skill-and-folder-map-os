@@ -2,7 +2,7 @@
 
 Status: not filled in yet
 
-<!-- Claude: fill this in during setup step 2 (setup/05-get-to-know-the-business.md), if it comes up naturally. First names and roles are enough. Never store personal details beyond what's needed to work (no home addresses, no personal phone numbers unless asked). -->
+<!-- Claude: fill this in during setup step 3 (setup/05-get-to-know-the-business.md), if it comes up naturally. First names and roles are enough. Never store personal details beyond what's needed to work (no home addresses, no personal phone numbers unless asked). -->
 
 ## The team and helpers
 

@@ -14,6 +14,13 @@ In Claude Code, every skill is also a command: type `/` and its name, for exampl
 | `group-my-skills` | "Group my skills", or press **Group** in the app | Claude sorts every skill into the business area it belongs to, leaving anything it's not sure about ungrouped |
 | `review-my-skills` | "Review my skills", or press **Review** in the app | Claude suggests what's worth tidying: duplicate names, skills gone unused, overlapping ones to merge, and gaps worth filling |
 
+## Your folder map
+
+| Skill | Say something like | What happens |
+|---|---|---|
+| `scan-my-folders` | "Scan my folders", or press **Scan** in the Files map | Claude looks through the folders you've chosen and saves a map of what's in them, names, sizes and dates only. Read-only |
+| `review-my-folders` | "Review my folders", or press **Review** in the Files map | Claude suggests what's worth tidying: duplicate files, big old files, old downloads, untidy names, and crowded or empty folders |
+
 ## Keeping things organised
 
 | Skill | Say something like | What happens |
@@ -36,7 +43,7 @@ In Claude Code, every skill is also a command: type `/` and its name, for exampl
 
 ## The rules every skill follows
 
-- Skill Map OS only reads. It never changes, moves, deletes or sends anything on its own; your skills never leave your computer.
+- Skill and Folder Map OS only reads. It never changes, moves, deletes or sends anything on its own; your skills and files never leave your computer.
 - Claude only ever suggests a tidy-up. You mark each one Done or Not now.
 - Everything stays in this folder or in the apps you've connected.
 

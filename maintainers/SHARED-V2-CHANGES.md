@@ -2,7 +2,7 @@
 
 > **Superseded on 6 October 2026 by `SHARED-V3-CHANGES.md` (shared version 3).** Build every tool against version 3. This file is kept for the record.
 
-Shared version 2, 6 October 2026. Task List OS is the reference. Every other tool in the toolkit (Pipeline OS, Skill Map OS and the rest) copies the parts below from this folder so they can attach to each other. `ATTACHING.md` explains why; this file is the exact list.
+Shared version 2, 6 October 2026. Task List OS is the reference. Every other tool in the toolkit (Pipeline OS, Skill and Folder Map OS and the rest) copies the parts below from this folder so they can attach to each other. `ATTACHING.md` explains why; this file is the exact list.
 
 When a shared part changes here, the number in `apps/shared/VERSION` goes up, this file gets a new version, and the change is copied into every other tool.
 

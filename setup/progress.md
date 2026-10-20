@@ -5,9 +5,10 @@ Claude ticks each step when it's done and adds a short note, so setup can pick u
 Setup status: not started
 
 - [ ] 1. The first scan
-- [ ] 2. Get to know the business (and make the app look like it)
-- [ ] 3. Group by the business, then show the gaps
-- [ ] 4. Check and hand over
+- [ ] 2. Map your folders
+- [ ] 3. Get to know the business (and make the app look like it)
+- [ ] 4. Group by the business, then show the gaps
+- [ ] 5. Check and hand over
 
 ## Notes for next time
 

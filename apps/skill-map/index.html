@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Skill Map OS</title>
+  <title>Skill and Folder Map OS</title>
   <meta name="description" content="Every skill Claude has, drawn as one map: which you use, how they connect, and which parts of your business have none yet.">
   <link rel="icon" type="image/png" href="../shared/images/claude-icon.png">
   <!-- Shared look (theme.css holds every colour and font) -->
@@ -39,16 +39,16 @@
       <section class="tool-group" data-tool-group="skill-map">
         <button type="button" class="tool-group__head" aria-expanded="true" aria-controls="nav">
           <span class="tool-group__icon"><span data-icon="map"></span></span>
-          <span class="tool-group__name">Skill Map OS</span>
+          <span class="tool-group__name">Skill and Folder Map OS</span>
           <span class="tool-group__count" aria-hidden="true"></span>
           <span class="tool-group__chevron"><span data-icon="chevronDown"></span></span>
         </button>
         <div class="tool-group__body">
-          <nav class="nav" id="nav" aria-label="Skill Map OS">
+          <nav class="nav" id="nav" aria-label="Skill and Folder Map OS">
             <a class="nav__item" href="#map" data-view="map"><span data-icon="map"></span>Map</a>
-            <a class="nav__item" href="#skills" data-view="skills"><span data-icon="list"></span>All skills<span class="nav__count" data-count="skills"></span></a>
+            <a class="nav__item" href="#skills" data-view="skills"><span data-icon="list"></span><span class="nav__label" data-label="skills">All skills</span><span class="nav__count" data-count="skills"></span></a>
             <a class="nav__item" href="#overview" data-view="overview"><span data-icon="barChart"></span>Overview</a>
-            <a class="nav__item" href="#gaps" data-view="gaps"><span data-icon="target"></span>Gaps<span class="nav__count" data-count="gaps"></span></a>
+            <a class="nav__item" href="#gaps" data-view="gaps"><span data-icon="target"></span><span class="nav__label" data-label="gaps">Gaps</span><span class="nav__count" data-count="gaps"></span></a>
             <a class="nav__item" href="#review" data-view="review"><span data-icon="sparkle"></span>Review<span class="nav__count nav__count--accent" data-count="review"></span></a>
           </nav>
         </div>
@@ -80,6 +80,10 @@
           <h1 id="viewTitle">Map</h1>
           <span class="topbar__sub" id="viewSub"></span>
         </div>
+        <div class="segmented lens" role="group" aria-label="Map of">
+          <button type="button" data-action="lens" data-lens="skills" aria-pressed="true" title="Your skills (T)"><span data-icon="sparkle"></span><span class="lens__label">Skills</span></button>
+          <button type="button" data-action="lens" data-lens="files" aria-pressed="false" title="Your folders and files (T)"><span data-icon="folder"></span><span class="lens__label">Files</span></button>
+        </div>
         <div class="topbar__search">
           <span data-icon="search" class="topbar__search-icon"></span>
           <input type="search" id="searchInput" class="input" placeholder="Find a skill" autocomplete="off" aria-label="Find a skill">
@@ -109,7 +113,9 @@
     <div class="modal__body shortcuts">
       <div><span class="kbd">/</span> Find a skill</div>
       <div><span class="kbd">1</span> to <span class="kbd">5</span> Map, All skills, Overview, Gaps, Review</div>
+      <div><span class="kbd">T</span> Switch between your skills and your folders</div>
       <div><span class="kbd">S</span> Scan again</div>
+      <div><span class="kbd">U</span> Up one folder (folder map)</div>
       <div><span class="kbd">F</span> Fit the whole map on screen</div>
       <div><span class="kbd">+</span> <span class="kbd">-</span> Zoom the map (click it first)</div>
       <div><span class="kbd">Esc</span> Close a panel or pop-up</div>
@@ -121,6 +127,7 @@
   <script src="../shared/js/store.js"></script>
   <script src="../shared/js/sidebar.js"></script>
   <script src="app/model.js"></script>
+  <script src="app/files-model.js"></script>
   <script src="app/components.js"></script>
   <script src="app/map.js"></script>
   <script src="app/view-map.js"></script>
@@ -128,8 +135,10 @@
   <script src="app/view-overview.js"></script>
   <script src="app/view-gaps.js"></script>
   <script src="app/view-review.js"></script>
+  <script src="app/view-files.js"></script>
   <script src="app/view-preferences.js"></script>
   <script src="app/drawer.js"></script>
+  <script src="app/drawer-files.js"></script>
   <script src="app/app.js"></script>
 </body>
 </html>

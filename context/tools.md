@@ -2,7 +2,7 @@
 
 Status: not filled in yet
 
-<!-- Claude: fill in "Your setup" during setup step 1 (setup/skill-map-01-first-scan.md). Skill Map OS makes no connections of its own, so "Connected apps" is usually empty unless another tool in the toolkit is attached. Never write passwords, keys or codes in this file or anywhere in this folder. -->
+<!-- Claude: fill in "Your setup" during setup step 1 (setup/skill-map-01-first-scan.md). Skill and Folder Map OS makes no connections of its own, so "Connected apps" is usually empty unless another tool in the toolkit is attached. Never write passwords, keys or codes in this file or anywhere in this folder. -->
 
 ## Your setup
 

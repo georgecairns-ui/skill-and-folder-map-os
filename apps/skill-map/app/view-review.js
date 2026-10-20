@@ -22,7 +22,7 @@
   function recCard(c, r) {
     const k = KINDS[r.kind] || KINDS.review;
     const skills = r.nodeIds.map(function (id) { return M.nodeById(c.d, id); }).filter(Boolean);
-    const prompt = "Skill Map OS suggested this about my skills: " + r.title + ". " + (r.why || "") + " Skills involved: " + skills.map(function (n) { return n.name + " (" + n.path + ")"; }).join(", ") + ". Please talk me through it and help me do it. Don't change anything until I say so.";
+    const prompt = "Skill and Folder Map OS suggested this about my skills: " + r.title + ". " + (r.why || "") + " Skills involved: " + skills.map(function (n) { return n.name + " (" + n.path + ")"; }).join(", ") + ". Please talk me through it and help me do it. Don't change anything until I say so.";
     return '<article class="rec enter" data-rec="' + esc(r.id) + '">' +
       '<div class="rec__icon">' + icon(k.icon) + "</div>" +
       '<div class="rec__body"><div class="rec__top"><span class="chip chip--quiet">' + esc(k.label) + "</span></div>" +
