@@ -2,31 +2,32 @@
 #
 # MAKE RELEASE
 # ------------
-# Builds dist/skill-map-os.zip: a clean copy of the kit for customers to download.
+# Builds dist/skill-and-folder-map-os.zip: a clean copy of the kit for customers to download.
 #
-# Run it from the skill-map-os folder with:   bash maintainers/make-release.sh
+# Run it from the skill-and-folder-map-os folder with:   bash maintainers/make-release.sh
 #
 # What it does:
 #   1. Checks the files that ship are still blank templates, so nobody's real skill map,
-#      business notes or setup progress can go out by mistake. Stops if not.
-#   2. Copies the kit into a temporary folder called "Skill Map OS", leaving out this
+#      folder map, business notes or setup progress can go out by mistake. Stops if not.
+#   2. Copies the kit into a temporary folder called "Skill and Folder Map OS", leaving out this
 #      maintainers folder, git history, old builds, backups and computer clutter.
-#   3. Checks the copy is complete and the data file is valid, and syntax-checks both scan scripts.
-#   4. Zips it as dist/skill-map-os.zip, replacing any older one.
+#   3. Checks the copy is complete and both data files are valid, and syntax-checks all 4 scan scripts.
+#   4. Zips it as dist/skill-and-folder-map-os.zip, replacing any older one.
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DIST="$ROOT/dist"
-STAGE="$(mktemp -d "${TMPDIR:-/tmp}/skill-map-os-build.XXXXXX")"
+STAGE="$(mktemp -d "${TMPDIR:-/tmp}/skill-and-folder-map-os-build.XXXXXX")"
 trap 'rm -rf "$STAGE"' EXIT
-NAME="Skill Map OS"
+NAME="Skill and Folder Map OS"
 OUT="$STAGE/$NAME"
 
 fail() { echo "RELEASE STOPPED: $1" >&2; exit 1; }
 
 # ---------- 1. Is everything that ships still a blank template? ----------
-python3 - "$ROOT" <<'PYEOF' || fail "the files above contain real data. Restore them with: git checkout -- apps/skill-map/data context setup/progress.md CLAUDE.md"
+python3 - "$ROOT" <<'PYEOF' || fail "the files above contain real data. Restore them with: git checkout -- apps/skill-map/data context setup/progress.md CLAUDE.md
+  (apps/skill-map/data covers both skillmap.json and filemap.json)"
 import json, sys, pathlib, re
 root = pathlib.Path(sys.argv[1])
 problems = []
@@ -50,6 +51,24 @@ if any(settings.get(k) for k in ("yourName", "businessName")):
     problems.append("apps/skill-map/data/skillmap.json has a name in its settings")
 if settings.get("extraFolders"):
     problems.append("apps/skill-map/data/skillmap.json has extra folders in its settings")
+
+fdata = json.loads((root / "apps/skill-map/data/filemap.json").read_text())
+if fdata.get("folders"):
+    problems.append("apps/skill-map/data/filemap.json has folders in it")
+if fdata.get("files"):
+    problems.append("apps/skill-map/data/filemap.json has files in it")
+if fdata.get("scan") is not None:
+    problems.append("apps/skill-map/data/filemap.json has a scan in it")
+if fdata.get("recommendations"):
+    problems.append("apps/skill-map/data/filemap.json has recommendations in it")
+findings = fdata.get("findings") or {}
+if any(findings.get(k) for k in findings):
+    problems.append("apps/skill-map/data/filemap.json has findings in it")
+fsettings = fdata.get("settings", {})
+if fsettings.get("roots"):
+    problems.append("apps/skill-map/data/filemap.json has folders listed in settings.roots")
+if fsettings.get("setUp"):
+    problems.append("apps/skill-map/data/filemap.json says setup is done")
 # No demo mode and no sample files ship
 for f in list((root / "apps").rglob("*.js")) + list((root / "apps").rglob("*.html")) + list((root / "apps").rglob("menu.json")):
     txt = f.read_text(errors="ignore")
@@ -78,30 +97,50 @@ mkdir -p "$OUT" "$DIST"
 rsync -a \
   --exclude '.git' --exclude '.gitignore' --exclude 'dist' --exclude 'maintainers' \
   --exclude '.claude/launch.json' --exclude '.claude/settings.local.json' --exclude '.claude/.cc-writes' \
-  --exclude '*.backup.json' --exclude 'apps/home/data' --exclude '.DS_Store' --exclude '._*' --exclude 'Thumbs.db' --exclude 'desktop.ini' \
+  --exclude '*.backup.json' --exclude '*.tmp-*' --exclude 'apps/home/data' --exclude '.DS_Store' --exclude '._*' --exclude 'Thumbs.db' --exclude 'desktop.ini' \
   --exclude '__pycache__' --exclude '*.pyc' \
   "$ROOT/" "$OUT/"
 # Claude Code can leave empty .claude folders around the kit while it works; only the top one ships
 find "$OUT" -mindepth 2 -type d -name .claude -empty -prune -exec rm -rf {} +
 
 # ---------- 3. Checks ----------
-for f in "START-HERE.md" "CLAUDE.md" "Open Skill Map.html" "apps/skill-map/index.html" "apps/skill-map/data/skillmap.json" "apps/skill-map/menu.json" "apps/skill-map/home-boxes.js" "apps/skill-map/claude-jobs.json" "apps/skill-map/areas-default.json" "apps/skill-map/scan/scan.js" "apps/skill-map/scan/scan.py" "apps/skill-map/app/app.js" "apps/skill-map/app/map.js" "apps/skill-map/app/model.js" "setup/progress.md" "setup/skill-map-01-first-scan.md" "setup/skill-map-02-group-by-business.md" ".claude/skills/README.md" ".claude/settings.json" ".claude/skills/scan-my-skills/SKILL.md" ".claude/skills/group-my-skills/SKILL.md" ".claude/skills/review-my-skills/SKILL.md" "setup/scripts/save-key.sh" "setup/scripts/start-task-list.sh" "apps/server/server.js" "apps/server/server.py" "setup/connections/README.md" "toolkit.json" "ATTACHING.md" "apps/installed.json" "apps/shared/catalogue.json" "apps/shared/VERSION" "apps/shared/sidebar.css" "apps/shared/js/sidebar.js" "apps/shared/js/theme.js" "apps/shared/js/braindump.js" ".claude/skills/sort-brain-dump/SKILL.md" "apps/shared/images/claude-icon.png" "apps/home/index.html" "apps/home/home.js" "apps/home/home.css" "apps/shared/fonts/Figtree-Variable.woff2" "setup/09-check-and-hand-over.md"; do
+for f in "START-HERE.md" "CLAUDE.md" "Open Skill and Folder Map.html" "apps/skill-map/index.html" "apps/skill-map/data/skillmap.json" "apps/skill-map/data/filemap.json" "apps/skill-map/menu.json" "apps/skill-map/home-boxes.js" "apps/skill-map/claude-jobs.json" "apps/skill-map/areas-default.json" "apps/skill-map/scan/scan.js" "apps/skill-map/scan/scan.py" "apps/skill-map/scan/scan-files.js" "apps/skill-map/scan/scan-files.py" "apps/skill-map/app/app.js" "apps/skill-map/app/map.js" "apps/skill-map/app/model.js" "apps/skill-map/app/files-model.js" "apps/skill-map/app/view-files.js" "apps/skill-map/app/drawer-files.js" "setup/progress.md" "setup/skill-map-01-first-scan.md" "setup/skill-map-02-group-by-business.md" "setup/skill-map-03-map-your-folders.md" ".claude/skills/README.md" ".claude/settings.json" ".claude/skills/scan-my-skills/SKILL.md" ".claude/skills/group-my-skills/SKILL.md" ".claude/skills/review-my-skills/SKILL.md" ".claude/skills/scan-my-folders/SKILL.md" ".claude/skills/review-my-folders/SKILL.md" "setup/scripts/save-key.sh" "setup/scripts/start-task-list.sh" "apps/server/server.js" "apps/server/server.py" "setup/connections/README.md" "toolkit.json" "ATTACHING.md" "apps/installed.json" "apps/shared/catalogue.json" "apps/shared/VERSION" "apps/shared/sidebar.css" "apps/shared/js/sidebar.js" "apps/shared/js/theme.js" "apps/shared/js/braindump.js" ".claude/skills/sort-brain-dump/SKILL.md" "apps/shared/images/claude-icon.png" "apps/home/index.html" "apps/home/home.js" "apps/home/home.css" "apps/shared/fonts/Figtree-Variable.woff2" "setup/09-check-and-hand-over.md"; do
   [ -e "$OUT/$f" ] || fail "missing $f"
 done
-for f in apps/skill-map/data/skillmap.json apps/skill-map/menu.json apps/skill-map/claude-jobs.json apps/skill-map/areas-default.json toolkit.json apps/installed.json apps/shared/catalogue.json; do
+for f in apps/skill-map/data/skillmap.json apps/skill-map/data/filemap.json apps/skill-map/menu.json apps/skill-map/claude-jobs.json apps/skill-map/areas-default.json toolkit.json apps/installed.json apps/shared/catalogue.json; do
   python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$OUT/$f" || fail "$f is not valid"
 done
-# A fresh download lists only Skill Map OS, and no test tool ever ships
-python3 -c 'import json,sys; t=json.load(open(sys.argv[1]))["tools"]; sys.exit(0 if [x["id"] for x in t]==["skill-map"] else 1)' "$OUT/apps/installed.json" || fail "apps/installed.json must list only Skill Map OS"
+# A fresh download lists only Skill and Folder Map OS, and no test tool ever ships
+python3 -c 'import json,sys; t=json.load(open(sys.argv[1]))["tools"]; sys.exit(0 if [x["id"] for x in t]==["skill-map"] else 1)' "$OUT/apps/installed.json" || fail "apps/installed.json must list only Skill and Folder Map OS"
 python3 -c 'import json,sys; t=json.load(open(sys.argv[1])); sys.exit(0 if t.get("id")=="skill-map" else 1)' "$OUT/toolkit.json" || fail "toolkit.json must have id skill-map"
 [ ! -e "$OUT/apps/test-tool" ] || fail "the test tool is in the release"
+# Both data files must be listed, in both places that track them
+for f in apps/installed.json toolkit.json; do
+  python3 -c '
+import json, sys
+want = {"apps/skill-map/data/skillmap.json", "apps/skill-map/data/filemap.json"}
+d = json.load(open(sys.argv[1]))
+entries = d["tools"] if "tools" in d else [d]
+for t in entries:
+    if t.get("id") == "skill-map":
+        got = set(t.get("dataFiles") or [])
+        sys.exit(0 if want <= got else 1)
+sys.exit(1)
+' "$OUT/$f" || fail "$f must list both apps/skill-map/data/skillmap.json and apps/skill-map/data/filemap.json"
+done
 
-# Syntax-check both scan scripts, without leaving a __pycache__ behind in the kit
+# Syntax-check both scan pairs, without leaving a __pycache__ behind in the kit
 PYCHECK="$(mktemp -d "${TMPDIR:-/tmp}/skill-map-pycheck.XXXXXX")"
 node --check "$OUT/apps/skill-map/scan/scan.js" || fail "apps/skill-map/scan/scan.js has a syntax error"
+node --check "$OUT/apps/skill-map/scan/scan-files.js" || fail "apps/skill-map/scan/scan-files.js has a syntax error"
 PYTHONPYCACHEPREFIX="$PYCHECK" python3 -m py_compile "$OUT/apps/skill-map/scan/scan.py" || fail "apps/skill-map/scan/scan.py has a syntax error"
+PYTHONPYCACHEPREFIX="$PYCHECK" python3 -m py_compile "$OUT/apps/skill-map/scan/scan-files.py" || fail "apps/skill-map/scan/scan-files.py has a syntax error"
 rm -rf "$PYCHECK"
 if find "$OUT" -name '__pycache__' | grep -q .; then fail "a __pycache__ folder was left in the kit"; fi
+# No stray backup or in-progress scan files
+if find "$OUT" -name '*.backup.json' -o -name '*.tmp-*' | grep -q .; then
+  fail "a backup or in-progress scan file was left in the kit: $(find "$OUT" -name '*.backup.json' -o -name '*.tmp-*' | head -3)"
+fi
 
 # No em dash anywhere shipped, except the vendored shared fonts licence
 if grep -rIl $'\xe2\x80\x94' "$OUT" --exclude='OFL.txt' >/dev/null 2>&1; then
@@ -112,10 +151,14 @@ BANNED='leverage|synergy|game-changer|seamless|cutting-edge|streamline|empower|u
 if grep -EinH "$BANNED" "$OUT/README.md" "$OUT/START-HERE.md" >/dev/null 2>&1; then
   fail "a banned word is in README.md or START-HERE.md: $(grep -EinH "$BANNED" "$OUT/README.md" "$OUT/START-HERE.md" | head -3)"
 fi
+# The old name must not linger anywhere a customer reads first
+if grep -inH 'Skill Map OS' "$OUT/README.md" "$OUT/START-HERE.md" >/dev/null 2>&1; then
+  fail "the old name 'Skill Map OS' is still in README.md or START-HERE.md: $(grep -inH 'Skill Map OS' "$OUT/README.md" "$OUT/START-HERE.md" | head -3)"
+fi
 
 SKILLS=$(find "$OUT/.claude/skills" -name SKILL.md | wc -l | tr -d ' ')
 
 # ---------- 4. Zip (COPYFILE_DISABLE stops macOS adding hidden ._ files) ----------
-rm -f "$DIST/skill-map-os.zip"
-(cd "$STAGE" && COPYFILE_DISABLE=1 zip -rqX "$DIST/skill-map-os.zip" "$NAME")
-echo "Built dist/skill-map-os.zip ($(du -h "$DIST/skill-map-os.zip" | cut -f1 | tr -d ' '), $SKILLS skills)"
+rm -f "$DIST/skill-and-folder-map-os.zip"
+(cd "$STAGE" && COPYFILE_DISABLE=1 zip -rqX "$DIST/skill-and-folder-map-os.zip" "$NAME")
+echo "Built dist/skill-and-folder-map-os.zip ($(du -h "$DIST/skill-and-folder-map-os.zip" | cut -f1 | tr -d ' '), $SKILLS skills)"

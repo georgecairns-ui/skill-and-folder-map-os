@@ -1,6 +1,6 @@
 # Make it yours
 
-Skill Map OS comes with a clean, calm look in light or dark (the moon or sun button at the top switches), but it's your workspace. During setup Claude offers to use your own colours, font and logo; you can ask again any time ("make it match my brand"). The easiest way to change anything is to ask Claude, for example:
+Skill and Folder Map OS comes with a clean, calm look in light or dark (the moon or sun button at the top switches), but it's your workspace. During setup Claude offers to use your own colours, font and logo; you can ask again any time ("make it match my brand"). The easiest way to change anything is to ask Claude, for example:
 
 - "Make the map use our brand colours: navy and orange."
 - "Change the font to something rounder."
@@ -16,9 +16,11 @@ Skill Map OS comes with a clean, calm look in light or dark (the moon or sun but
 | Colours, fonts, corner roundness, spacing | `apps/shared/theme.css` (every look-and-feel setting is in this one file, with a light set and a dark set). The `match-my-brand` skill does it for you from your website or brand guidelines |
 | What Home shows | The **Customise** button on Home: show or hide boxes, drag them into order, make them wide. **Reset** puts it back |
 | The Get AI Powers slab-serif headings | `apps/shared/theme.css`: follow the note at the bottom of the file |
-| Your name, business name, which extra folders to scan, how far back to count a skill as "used lately" | Preferences (the cog) in the app, or `settings` in `apps/skill-map/data/skillmap.json` |
+| Your name, business name, which extra folders to scan for skills, how far back to count a skill as "used lately" | Preferences (the cog) in the app, or `settings` in `apps/skill-map/data/skillmap.json` |
 | Your business areas: rename, add, remove | Preferences, under "Areas" (saved as `areas` in the map file). Claude only ever adds the wording you give it; it never invents a new area on its own |
 | Extra folders to scan for skills, beyond `~/.claude` and this kit | Preferences, under "Extra folders". The scan picks them up next time it runs |
+| Which folders the Files map looks in | Preferences, under "Folders to map", or `settings.roots` in `apps/skill-map/data/filemap.json`. The scan picks them up next time it runs |
+| Names to skip when scanning folders | `settings.ignore` in `apps/skill-map/data/filemap.json` |
 | The logo in the sidebar | Ask Claude ("put our logo on it"). It saves your logo in `apps/shared/images/` and points the sidebar at it |
 | Your folders | `files/` |
 | How Claude writes for you | `context/voice.md` |
@@ -32,6 +34,7 @@ If Get AI Powers builds a version of the toolkit for your business or your clien
 
 ## Notes for Claude
 
+- The map itself is always drawn dark and glowing (a neon network with pulses and rotating rings), on both the Skills and the Files side, whichever theme the rest of the app is in. That's by design: don't change it when matching their brand. The rest of the app follows `apps/shared/theme.css` and `.claude/skills/match-my-brand` as normal.
 - Change colours only through the variables in `apps/shared/theme.css`, in both the light and the dark set (or follow `.claude/skills/match-my-brand`). Keep text dark enough on the background to read easily: aim for a contrast ratio of at least 4.5 to 1 for normal text. If a brand colour is too light for buttons, use a darker shade of it for buttons and keep the original for decoration.
 - Fonts must be files inside `apps/shared/fonts/` (the app works without internet). If the person wants a font you can't add as a file, use the closest system font in the font list instead and tell them.
 - After any change, ask them to reload the app and check it looks right.

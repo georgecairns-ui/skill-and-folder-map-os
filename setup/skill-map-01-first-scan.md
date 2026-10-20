@@ -1,4 +1,4 @@
-# Step 1: the first scan
+# Step 1 of 5: the first scan
 
 Goal: find every skill Claude can use on their computer and let them see the map for the first time.
 
@@ -45,4 +45,4 @@ Ask once, in one message:
 - A team folder or another folder on this computer: add it to `settings.extraFolders` in `apps/skill-map/data/skillmap.json`, then scan again.
 - claude.ai or Cowork: the scan can't see those. Tell them to use the **Add a skill** button in the app to add each one by hand.
 
-Tick this step in `setup/progress.md`.
+Tick this step in `setup/progress.md`. Next, step 2 maps their folders: follow `setup/skill-map-03-map-your-folders.md`.

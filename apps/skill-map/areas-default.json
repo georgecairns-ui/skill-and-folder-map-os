@@ -1,5 +1,5 @@
 {
-  "about": "The business areas Skill Map OS starts with. The scan copies these into data/skillmap.json the first time. Change the wording there (or in the app's Preferences), not here. Each 'ideas' line is something a skill could do in that area, shown on the Gaps page when the area has none.",
+  "about": "The business areas Skill and Folder Map OS starts with. The scan copies these into data/skillmap.json the first time. Change the wording there (or in the app's Preferences), not here. Each 'ideas' line is something a skill could do in that area, shown on the Gaps page when the area has none.",
   "areas": [
     {
       "key": "sales",

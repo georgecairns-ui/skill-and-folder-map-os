@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Sets up Skill Map OS: runs the first scan, asks about the business, groups the skills by what they do, and hands over. Use when they type /setup, say "set me up", "set up my skill map", "carry on setting up", or when CLAUDE.md says setup isn't done.
+description: Sets up Skill and Folder Map OS in 5 steps: runs the first skill scan, maps their folders, asks about the business, groups the skills by what they do, and hands over both maps. Use when they type /setup, say "set me up", "set up my skill map", "carry on setting up", or when CLAUDE.md says setup isn't done.
 ---
 
 # Setup

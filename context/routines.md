@@ -2,7 +2,7 @@
 
 Status: not filled in yet
 
-<!-- Claude: fill this in during setup step 2 (setup/05-get-to-know-the-business.md), if it comes up naturally. -->
+<!-- Claude: fill this in during setup step 3 (setup/05-get-to-know-the-business.md), if it comes up naturally. -->
 
 ## Working pattern
 

@@ -1,6 +1,6 @@
 # Shared version 3: what every tool copies from Task List OS
 
-Shared version 3, 6 October 2026. Task List OS is the reference. Every other tool in the toolkit (Pipeline OS, Skill Map OS and the rest) copies the parts below from this folder so they attach to each other and look like one app. `ATTACHING.md` explains why; this file is the exact list. It replaces `SHARED-V2-CHANGES.md`.
+Shared version 3, 6 October 2026. Task List OS is the reference. Every other tool in the toolkit (Pipeline OS, Skill and Folder Map OS and the rest) copies the parts below from this folder so they attach to each other and look like one app. `ATTACHING.md` explains why; this file is the exact list. It replaces `SHARED-V2-CHANGES.md`.
 
 **New in version 3:** every tool in the sidebar is a dropdown of its pages; a Home dashboard for the whole app that each tool adds boxes to; the clean look (Figtree font, white and soft grey, outlined cards, near-black main buttons, small Claude terracotta accents) in light and dark with a switch in the top bar; and a `match-my-brand` skill that puts the customer's colours, font and logo on the app during setup.
 

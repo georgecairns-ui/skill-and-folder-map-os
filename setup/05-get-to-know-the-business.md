@@ -1,4 +1,4 @@
-# Step 2: get to know the business
+# Step 3 of 5: get to know the business
 
 Goal: a short, accurate note in `context/business.md` so the groups on the map are accurate. Ask as little as possible.
 

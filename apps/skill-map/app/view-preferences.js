@@ -1,7 +1,7 @@
 /*
   PREFERENCES: your name, extra folders to scan, and the areas of your business
   -----------------------------------------------------------------------------
-  The areas are the words Skill Map OS uses to group skills by what they do for the business.
+  The areas are the words Skill and Folder Map OS uses to group skills by what they do for the business.
   Rename them, change what they say, add your own, or remove the ones that don't fit.
 */
 (function () {
@@ -27,7 +27,10 @@
       '<section class="panel"><div class="section-head"><h2>' + icon("user") + "About you</h2></div>" +
         '<div class="field-row"><label class="field"><span class="field__label">Your name</span><input class="input" name="yourName" value="' + esc(d.settings.yourName) + '"></label>' +
         '<label class="field"><span class="field__label">Your business</span><input class="input" name="businessName" value="' + esc(d.settings.businessName) + '"></label></div></section>' +
-      '<section class="panel"><div class="section-head"><h2>' + icon("folder") + "Other folders to scan</h2></div>" +
+      '<section class="panel"><div class="section-head"><h2>' + icon("folder") + "Folders to map</h2></div>" +
+        '<p class="muted">The folder map looks inside these folders, one on each line, and nowhere else. It reads names, sizes and dates only: never what is inside a file. Add a folder, or take one out, then scan your folders again. Hidden items, <code>node_modules</code> and the Library folder are always skipped.</p>' +
+        '<label class="field"><span class="field__label sr-only">Folders</span><textarea class="textarea" name="roots" rows="4" placeholder="For example ~/Documents">' + esc((c.f && c.f.settings.roots.length ? c.f.settings.roots : ["~/Documents", "~/Desktop", "~/Downloads"]).join("\n")) + "</textarea></label></section>" +
+      '<section class="panel"><div class="section-head"><h2>' + icon("sparkle") + "Other folders to look for skills in</h2></div>" +
         '<p class="muted">The scan already looks in your own skills, this toolkit and your plugins. If your team keeps skills in another folder, add it here, one folder on each line, then scan again.</p>' +
         '<label class="field"><span class="field__label sr-only">Folders</span><textarea class="textarea" name="extraFolders" rows="3" placeholder="For example /Users/sam/Documents/Team skills">' + esc(d.settings.extraFolders.join("\n")) + "</textarea></label></section>" +
       '<section class="panel"><div class="section-head"><h2>' + icon("target") + "Areas of your business</h2>" +
@@ -54,7 +57,8 @@
     }
     if (!areas.length) return { error: "Keep at least one area, so skills have somewhere to go." };
     const folders = f.extraFolders.value.split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean);
-    return { values: { yourName: f.yourName.value.trim(), businessName: f.businessName.value.trim(), extraFolders: folders }, areas: areas };
+    const roots = f.roots.value.split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean);
+    return { roots: roots, values: { yourName: f.yourName.value.trim(), businessName: f.businessName.value.trim(), extraFolders: folders }, areas: areas };
   }
 
   V.preferences = {

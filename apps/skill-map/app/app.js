@@ -18,7 +18,7 @@
   "use strict";
 
   const ui = window.TaskListOS.ui, esc = ui.esc, icon = ui.icon;
-  const M = window.SM.model, C = window.SM.c, V = window.SM.views, Drawer = window.SM.drawer;
+  const M = window.SM.model, FM = window.SM.fmodel, C = window.SM.c, V = window.SM.views, Drawer = window.SM.drawer;
   const mut = M.mut;
   const $ = function (sel, root) { return (root || document).querySelector(sel); };
 
@@ -38,11 +38,15 @@
     mapMode: remembered("smos-map-mode", ["area", "source"]),
     origins: [], used: "all", attention: false, tag: "", links: remembered("smos-links", ["on", "off"]) === "on",
     skillsQuery: "", skillsOrigin: "all", skillsAttention: false, skillsSort: { key: "name", dir: "asc" },
-    drawer: null, flyTo: null
+    drawer: null, flyTo: null,
+    // The Files side: which folder is in the middle of the map, filters, and the list
+    lens: remembered("smos-lens", ["skills", "files"]) || "skills", focus: null, pin: null, ftype: "", fworth: false,
+    fq: "", ffinding: "", flistMode: "files", fsort: { key: "bytes", dir: "desc" }
   };
   const claude = { jobs: [], timer: null, before: null };
 
   let data = null;
+  let fdata = null;
   let status = "checking";
   let statusDetail = {};
   const toolkit = { tools: [], installed: {}, booking: null };
@@ -72,6 +76,31 @@
     }
   });
 
+  // The folder map has its own file. If it can't be read the skills side carries on; the Files side shows its welcome card.
+  const fstore = window.TaskListOS.createStore({
+    moduleId: "skill-map-files",
+    fileName: "filemap.json",
+    dataPaths: ["data", "", "apps/skill-map/data"],
+    api: "/api/data/skill-map/filemap.json",
+    validate: FM.validate,
+    onStatus: function () {},
+    onData: function (d, reason) {
+      fdata = FM.normalise(d);
+      if (reason === "load") { state.focus = state.focus && FM.folderById(fdata, state.focus) ? state.focus : null; }
+      render();
+      if (reason === "external" && !claude.jobs.length && state.lens === "files") ui.toast("Your folder map was updated", { icon: "sparkle" });
+    }
+  });
+  function fchange(fn) {
+    if (!fdata) return Promise.resolve();
+    return fstore.update(function (d) { FM.normalise(d); fn(d); }).catch(function (err) {
+      ui.toast(friendlyError(err).short, { icon: "alert", duration: 6000 });
+      render();
+      err.shownToPerson = true;
+      throw err;
+    });
+  }
+
   function change(fn) {
     return store.update(function (d) { M.normalise(d); fn(d); }).catch(function (err) {
       ui.toast(friendlyError(err).short, { icon: "alert", duration: 6000 });
@@ -84,10 +113,10 @@
 
   function friendlyError(err) {
     const kind = err && err.kind;
-    if (kind === "bad-file") return { title: "Your skill map file has a small mistake in it.", body: "Nothing new can show or save until it's fixed. Claude can sort it in a few seconds, and the last good version is kept in skillmap.backup.json next to it.", say: "Please check my skillmap.json file and fix it", short: "Your skill map file needs a quick fix" };
-    if (kind === "missing") return { title: "Your skill map file has gone missing.", body: "It may have been moved or renamed. Ask Claude to check.", say: "My skill map file seems to be missing, please check it", short: "Your skill map file can't be found" };
+    if (kind === "bad-file") return { title: "Your map file has a small mistake in it.", body: "Nothing new can show or save until it's fixed. Claude can sort it in a few seconds, and the last good version is kept in skillmap.backup.json next to it.", say: "Please check my skillmap.json file and fix it", short: "Your map file needs a quick fix" };
+    if (kind === "missing") return { title: "Your map file has gone missing.", body: "It may have been moved or renamed. Ask Claude to check.", say: "My map file seems to be missing, please check it", short: "Your map file can't be found" };
     if (kind === "needs-permission") return { title: "Chrome needs your permission again.", body: "Click Try again and allow access to your folder.", short: "Chrome needs your permission again" };
-    if (kind === "helper-stopped") return { title: "Your skill map has stopped running.", body: "Everything is saved. In Claude, say “open my skill map” and it starts again. This page reconnects by itself.", say: "Open my skill map", short: "Your skill map has stopped running" };
+    if (kind === "helper-stopped") return { title: "Your map has stopped running.", body: "Everything is saved. In Claude, say “open my skill map” and it starts again. This page reconnects by itself.", say: "Open my map", short: "Your skill map has stopped running" };
     return { title: "That change didn't save.", body: "Nothing is lost. Try again in a moment.", short: "That change didn't save. Please try again" };
   }
 
@@ -103,19 +132,19 @@
   }
   function gateCard(art, eyebrow, title, body, actions, small) {
     return '<div class="gate__card">' +
-      '<div class="gate__text"><div class="gate__brand"><img src="../shared/images/claude-icon.png" alt="" width="28" height="28"><span>Skill Map OS</span></div>' +
+      '<div class="gate__text"><div class="gate__brand"><img src="../shared/images/claude-icon.png" alt="" width="28" height="28"><span>Skill and Folder Map OS</span></div>' +
       (eyebrow ? '<span class="label">' + esc(eyebrow) + "</span>" : "") + "<h1>" + title + "</h1>" + body +
       '<div class="gate__actions">' + actions + "</div>" + (small ? '<p class="gate__small">' + small + "</p>" : "") + "</div>" +
       '<div class="gate__art"><img src="' + C.ART[art] + '" alt="" width="440" height="440"></div></div>';
   }
   function renderGate(message) {
     if (status === "checking" || (status === "ready" && !data)) {
-      return showGate('<div class="gate__loading" aria-busy="true" aria-label="Opening your skill map"><div class="skeleton" style="width:220px;height:14px"></div><div class="skeleton" style="width:320px;height:28px"></div><div class="skeleton" style="width:260px;height:14px"></div></div>');
+      return showGate('<div class="gate__loading" aria-busy="true" aria-label="Opening your map"><div class="skeleton" style="width:220px;height:14px"></div><div class="skeleton" style="width:320px;height:28px"></div><div class="skeleton" style="width:260px;height:14px"></div></div>');
     }
     if (status === "needs-helper") {
-      return showGate(gateCard("welcome", "", "Your skill map opens from Claude.",
-        "<p>Claude runs your skill map on this computer and gives you a link to it. In Claude Code, in your Skill Map OS folder, just say:</p>" + C.say("Open my skill map") +
-        '<p class="gate__note">Not set up yet? Say <strong>/setup</strong> instead. Claude scans your skills and draws the map for you.</p>',
+      return showGate(gateCard("welcome", "", "Your map opens from Claude.",
+        "<p>Claude runs your map on this computer and gives you a link to it. In Claude Code, in your Skill and Folder Map OS folder, just say:</p>" + C.say("Open my map") +
+        '<p class="gate__note">Not set up yet? Say <strong>/setup</strong> instead. Claude scans your skills and your folders and draws the maps for you.</p>',
         "",
         '<button type="button" class="link-btn" data-action="connect">Or connect the folder yourself in Chrome</button>'));
     }
@@ -124,19 +153,19 @@
     }
     if (status === "needs-permission") {
       return showGate(gateCard("welcome", "Welcome back", "Pick up where you left off.", "<p>Chrome asks for one click each visit before this page can open your files.</p>",
-        '<button type="button" class="btn btn--primary btn--lg" data-action="reconnect">' + icon("folder") + "Open my skill map</button>", "Folder: " + esc(statusDetail.folderName || "")));
+        '<button type="button" class="btn btn--primary btn--lg" data-action="reconnect">' + icon("folder") + "Open my map</button>", "Folder: " + esc(statusDetail.folderName || "")));
     }
     if (status === "error" && !data) {
       const f = friendlyError(statusDetail.error);
       return showGate(gateCard("shrug", "Something needs a look", esc(f.title), "<p>" + esc(f.body) + "</p>" + (f.say ? C.say(f.say) : ""),
         '<button type="button" class="btn btn--primary btn--lg" data-action="retry">' + icon("refresh") + "Try again</button>"));
     }
-    showGate(gateCard("welcome", "One-time setup", "See every skill Claude has. <span class=\"accent\">At a glance.</span>",
-      "<p>Skill Map OS finds the skills on your computer, shows which ones you use, and which parts of your business have none yet. It only reads. It all lives in a file on your own computer.</p>" +
-      '<ol class="gate__steps"><li><span>Click <strong>Connect your skill map</strong>.</span></li><li><span>Choose your <strong>Skill Map OS</strong> folder, the one with START-HERE.md in it.</span></li><li><span>When Chrome asks to let this page edit files, click <strong>Allow</strong>.</span></li></ol>' +
+    showGate(gateCard("welcome", "One-time setup", "See every skill and folder you have. <span class=\"accent\">At a glance.</span>",
+      "<p>Skill and Folder Map OS finds the skills on your computer and the folders and files you keep, draws each as a map you can click into, and shows what you use, what is doubled up and what to tidy first. It only reads names, sizes and dates. It all lives in files on your own computer.</p>" +
+      '<ol class="gate__steps"><li><span>Click <strong>Connect your map</strong>.</span></li><li><span>Choose your <strong>Skill and Folder Map OS</strong> folder, the one with START-HERE.md in it.</span></li><li><span>When Chrome asks to let this page edit files, click <strong>Allow</strong>.</span></li></ol>' +
       (message ? '<p class="gate__error" role="alert">' + icon("alert") + esc(message) + "</p>" : ""),
-      '<button type="button" class="btn btn--primary btn--lg" data-action="connect">' + icon("folder") + "Connect your skill map</button>",
-      "No account, nothing to install. Your skills never leave your computer."));
+      '<button type="button" class="btn btn--primary btn--lg" data-action="connect">' + icon("folder") + "Connect your map</button>",
+      "No account, nothing to install. Your skills and files never leave your computer."));
   }
 
   // ============================================================
@@ -157,9 +186,17 @@
   const actions = {
     openNode: function (id) { openDrawer("skill", id); },
     openGroup: function (key) { openDrawer("group", key); },
-    closeDrawer: function () { closeDrawer(); }
+    closeDrawer: function () { closeDrawer(); },
+    openFile: function (id) { openDrawer("file", id); },
+    drill: function (id) { drill(id); },
+    up: function () { up(); }
   };
-  function ctx() { return { d: data, state: state, actions: actions, toolkit: toolkit, canScan: store.isHelper() }; }
+  function ctx() { return { d: data, f: fdata, state: state, actions: actions, toolkit: toolkit, canScan: store.isHelper() }; }
+  // On the Files side the pages are the folder ones; the map page is shared and branches inside itself
+  function viewFor(name) {
+    if (state.lens === "files" && V.f && V.f[name === "skills" ? "list" : name]) return V.f[name === "skills" ? "list" : name];
+    return V[name] || V.map;
+  }
 
   function renderChrome() {
     const pill = $("#saveStatus");
@@ -183,23 +220,37 @@
 
     if (!data) return;
     $("#businessName").textContent = data.settings.businessName || (data.settings.yourName ? data.settings.yourName + "'s workspace" : "Your workspace");
-    const n = M.numbers(data);
-    const counts = { skills: data.nodes.length || "", gaps: M.hasAreas(data) ? n.areasEmpty || "" : "", review: M.reviewCount(data) || "" };
+    const files = state.lens === "files";
+    document.body.setAttribute("data-lens", state.lens);
+    const n = M.numbers(data), fn = fdata && !FM.notSetUp(fdata) ? FM.numbers(fdata) : null;
+    const counts = files
+      ? { skills: fn ? FM.fmtCount(fn.files) : "", gaps: fn ? fn.worth || "" : "", review: fdata ? FM.openRecs(fdata).length || "" : "" }
+      : { skills: data.nodes.length || "", gaps: M.hasAreas(data) ? n.areasEmpty || "" : "", review: M.reviewCount(data) || "" };
     document.querySelectorAll("[data-count]").forEach(function (el) { const v = counts[el.getAttribute("data-count")]; el.textContent = v ? v : ""; });
+    const labels = files ? { skills: "All files", gaps: "Clean-up" } : { skills: "All skills", gaps: "Gaps" };
+    document.querySelectorAll("[data-label]").forEach(function (el) { const k = el.getAttribute("data-label"); if (labels[k]) el.textContent = labels[k]; });
     document.querySelectorAll(".nav__item").forEach(function (a) {
       const on = a.getAttribute("data-view") === state.view;
       a.classList.toggle("is-active", on);
       if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
     });
-    $("#savedMini").innerHTML = M.notSetUp(data) ? "" : '<span class="saved-mini__value num">' + n.total + '</span><span class="saved-mini__label">' + (n.total === 1 ? "skill" : "skills") + " mapped</span>";
+    document.querySelectorAll("[data-lens]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-lens") === state.lens)); });
+    $("#savedMini").innerHTML = files
+      ? (fn ? '<span class="saved-mini__value num">' + FM.fmtCount(fn.files) + '</span><span class="saved-mini__label">' + (fn.files === 1 ? "file" : "files") + " mapped, " + FM.fmtBytes(fn.bytes) + "</span>" : "")
+      : (M.notSetUp(data) ? "" : '<span class="saved-mini__value num">' + n.total + '</span><span class="saved-mini__label">' + (n.total === 1 ? "skill" : "skills") + " mapped</span>");
+    const notSet = files ? FM.notSetUp(fdata) : M.notSetUp(data);
+    const scanLabel = notSet ? (files ? "Scan my folders" : "Scan my skills") : "Scan again";
     $("#scanBtn").disabled = claude.jobs.length > 0;
-    const scanLabel = M.notSetUp(data) ? "Scan my skills" : "Scan again";
+    $("#scanBtn").setAttribute("data-action", files ? "scan-folders" : "scan");
     $("#scanBtn .topbar__new-label").textContent = scanLabel;
     $("#scanBtn").setAttribute("aria-label", scanLabel);
+    $("#searchInput").placeholder = files ? "Find a file or folder" : "Find a skill";
+    $("#searchInput").setAttribute("aria-label", files ? "Find a file or folder" : "Find a skill");
+    $(".topbar__add").hidden = files;
   }
 
   function renderView() {
-    const view = V[state.view] || V.map;
+    const view = viewFor(state.view);
     const root = $("#view");
     const c = ctx();
     const scroll = root.scrollTop;
@@ -210,7 +261,7 @@
     root.scrollTop = scroll;
     $("#viewTitle").textContent = view.title(c);
     $("#viewSub").textContent = view.sub ? view.sub(c) : "";
-    document.title = view.title(c) + " · Skill Map OS";
+    document.title = view.title(c) + " · Skill and Folder Map OS";
   }
 
   // The panel
@@ -236,7 +287,7 @@
   function syncMapSelection() {
     const map = V.map.controls();
     if (!map || state.view !== "map") return;
-    map.setSelected(state.drawer ? (state.drawer.kind === "group" ? "hub:" + state.drawer.id : state.drawer.id) : null);
+    map.setSelected(state.drawer ? (state.drawer.kind === "group" || state.drawer.kind === "folder" ? "hub:" + state.drawer.id : state.drawer.id) : null);
   }
   function openDrawer(kind, id) {
     if (!id) return;
@@ -257,9 +308,45 @@
     remember("smos-view", view);
     if (location.hash !== "#" + view) history.replaceState(null, "", "#" + view);
     document.body.classList.remove("sidebar-open");
-    if (inApp()) { renderChrome(); renderView(); $("#view").scrollTop = 0; syncMapSelection(); }
+    if (inApp()) { renderChrome(); renderView(); renderDrawer(); $("#view").scrollTop = 0; syncMapSelection(); }
   }
-  window.addEventListener("hashchange", function () { const v = location.hash.slice(1); if (v && v !== state.view) go(v); });
+  window.addEventListener("hashchange", function () { const v = location.hash.slice(1); if (v && v !== state.view) { state.drawer = null; go(v); } });
+
+  // Go into a folder on the map (null goes back to all the folders)
+  function drill(id) {
+    state.focus = id || null; state.pin = null; state.drawer = null; state.flyTo = null;
+    if (state.view !== "map") go("map"); else { renderView(); renderDrawer(); }
+  }
+  function up() {
+    const f = state.focus ? FM.folderById(fdata, state.focus) : null;
+    drill(f && f.parent ? f.parent : null);
+  }
+  function fileOnMap(id) {
+    const x = FM.fileById(fdata, id);
+    if (!x) return;
+    state.focus = x.folder; state.pin = id; state.flyTo = id; state.drawer = { kind: "file", id: id };
+    if (state.view !== "map") go("map"); else { renderView(); renderDrawer(); }
+  }
+  function setLens(lens) {
+    if (lens !== "skills" && lens !== "files") return;
+    state.lens = lens; remember("smos-lens", lens);
+    state.drawer = null; state.ffinding = "";
+    if (state.view === "preferences" || V[state.view] || state.view === "map") { /* stay on the same page */ }
+    render();
+  }
+  function showFinding(key) {
+    const card = FM.findingCards(fdata).find(function (k) { return k.key === key; });
+    state.lens = "files"; remember("smos-lens", "files");
+    state.ffinding = key; state.flistMode = card && card.folders ? "folders" : "files"; state.fq = ""; state.ftype = "";
+    state.fsort = card && card.folders ? { key: "files", dir: "desc" } : { key: "bytes", dir: "desc" };
+    go("skills");
+  }
+  function findingOnMap(key) {
+    const card = FM.findingCards(fdata).find(function (k) { return k.key === key; });
+    if (!card || !card.ids.length) return;
+    state.lens = "files"; remember("smos-lens", "files");
+    if (card.folders) drill(card.ids[0]); else fileOnMap(card.ids[0]);
+  }
 
   // Show a skill on the map: switch to the map page, then fly to it
   function showOnMap(id) {
@@ -280,8 +367,13 @@
   const JOBS = {
     scan: { name: "scan-my-skills", doing: "Claude is scanning your skills", say: "Scan my skills" },
     group: { name: "group-my-skills", doing: "Claude is grouping your skills", say: "Group my skills" },
-    review: { name: "review-my-skills", doing: "Claude is reviewing your skills", say: "Review my skills" }
+    review: { name: "review-my-skills", doing: "Claude is reviewing your skills", say: "Review my skills" },
+    scanfolders: { name: "scan-my-folders", doing: "Claude is looking through your folders", say: "Scan my folders" },
+    reviewfolders: { name: "review-my-folders", doing: "Claude is reviewing your folders", say: "Review my folders" }
   };
+  function snapshot() {
+    return { scanAt: data && data.scan ? data.scan.at : null, recs: data ? data.recommendations.length : 0, fscanAt: fdata && fdata.scan ? fdata.scan.at : null, frecs: fdata ? fdata.recommendations.length : 0 };
+  }
   // Resolves true if Claude was started (or queued)
   function askClaude(kind) {
     if (!store.isHelper()) return Promise.resolve(false);
@@ -289,7 +381,7 @@
       .then(function (r) {
         if (r.status !== 202) return false;
         if (claude.jobs.indexOf(kind) === -1) claude.jobs.push(kind);
-        claude.before = claude.before || { scanAt: data && data.scan ? data.scan.at : null, recs: data ? data.recommendations.length : 0 };
+        claude.before = claude.before || snapshot();
         watchClaude();
         return true;
       })
@@ -300,7 +392,7 @@
     askClaude(kind).then(function (started) {
       if (started) return;
       $("#genericBody").innerHTML = '<div class="modal__head"><h2>Ask Claude to do it</h2><button type="button" class="icon-btn" data-close aria-label="Close">' + icon("x") + "</button></div>" +
-        '<div class="modal__body"><p>Claude can’t be started from this page on this computer. In Claude Code, in your Skill Map OS folder, say:</p>' + C.say(JOBS[kind].say) +
+        '<div class="modal__body"><p>Claude can\u2019t be started from this page on this computer. In Claude Code, in your Skill and Folder Map OS folder, say:</p>' + C.say(JOBS[kind].say) +
         '<p class="muted">Claude does it straight away and this page updates by itself.</p></div>';
       $("#genericDialog").showModal();
     });
@@ -317,31 +409,44 @@
       }).catch(function () { /* helper briefly unavailable; keep watching */ });
     }, 3000);
   }
-  // Read the file fresh to say how it went (the app's own refresh pauses while its tab is hidden)
+  // Read both files fresh to say how it went (the app's own refresh pauses while its tab is hidden)
   function finishedClaude(result) {
-    fetch("/api/data/skill-map/skillmap.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (fresh) { reportClaude(fresh ? M.normalise(fresh) : data, result); }, function () { reportClaude(data, result); });
+    function get(url) { return fetch(url, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+    Promise.all([get("/api/data/skill-map/skillmap.json"), get("/api/data/skill-map/filemap.json")]).then(function (both) {
+      reportClaude(both[0] ? M.normalise(both[0]) : data, both[1] ? FM.normalise(both[1]) : fdata, result);
+    });
   }
-  function reportClaude(now, result) {
+  function reportClaude(now, fnow, result) {
     const kinds = claude.jobs.splice(0), before = claude.before || {};
     claude.before = null;
     setClaudeStatus("");
-    if (now && now !== data) { data = now; render(); }
-    renderChrome();
-    if (result === "failed") { ui.toast("Claude couldn’t finish. Say “" + JOBS[kinds[0] || "scan"].say + "” to Claude in Claude Code and it will tell you why.", { icon: "alert", duration: 9000 }); return; }
+    if (now && now !== data) data = now;
+    if (fnow && fnow !== fdata) fdata = fnow;
+    render();
+    if (result === "failed") { ui.toast("Claude couldn\u2019t finish. Say \u201c" + JOBS[kinds[0] || "scan"].say + "\u201d to Claude in Claude Code and it will tell you why.", { icon: "alert", duration: 9000 }); return; }
     if (kinds.indexOf("scan") > -1) {
       const s = now && now.scan, scanned = s && s.at && s.at !== before.scanAt;
-      if (!scanned) ui.toast("The scan didn’t save anything new. Say “Scan my skills” to Claude to see why.", { icon: "alert", duration: 9000 });
+      if (!scanned) ui.toast("The scan didn\u2019t save anything new. Say \u201cScan my skills\u201d to Claude to see why.", { icon: "alert", duration: 9000 });
       else ui.toast("Found " + now.nodes.length + (now.nodes.length === 1 ? " skill" : " skills") + (s.changes && s.changes.added ? ", " + s.changes.added + " new" : "") + (s.changes && s.changes.removed && s.changes.removed.length ? ", " + s.changes.removed.length + " gone" : ""), { icon: "sparkle", duration: 6000 });
     }
     if (kinds.indexOf("group") > -1) {
       if (now && M.hasAreas(now)) { state.mapMode = "area"; ui.toast("Claude grouped your skills. Check the groups, then say it looks right", { icon: "sparkle", duration: 7000 }); go("gaps"); }
-      else ui.toast("Claude didn’t group anything. Say “Group my skills” to Claude to see why.", { icon: "alert", duration: 9000 });
+      else ui.toast("Claude didn\u2019t group anything. Say \u201cGroup my skills\u201d to Claude to see why.", { icon: "alert", duration: 9000 });
     }
     if (kinds.indexOf("review") > -1) {
       const gained = now ? now.recommendations.length - (before.recs || 0) : 0;
       ui.toast(gained > 0 ? "Claude left " + gained + (gained === 1 ? " suggestion" : " suggestions") + " for you" : "Claude has nothing new to suggest", { icon: "sparkle", duration: 6000 });
       if (gained > 0) go("review");
+    }
+    if (kinds.indexOf("scanfolders") > -1) {
+      const s = fnow && fnow.scan, scanned = s && s.at && s.at !== before.fscanAt;
+      if (!scanned) ui.toast("The folder scan didn\u2019t save anything new. Say \u201cScan my folders\u201d to Claude to see why.", { icon: "alert", duration: 9000 });
+      else { state.focus = null; ui.toast("Looked through " + FM.fmtCount(s.totals.folders) + " folders: " + FM.fmtCount(s.totals.files) + " files, " + FM.fmtBytes(s.totals.bytes), { icon: "sparkle", duration: 6000 }); if (state.lens !== "files") setLens("files"); }
+    }
+    if (kinds.indexOf("reviewfolders") > -1) {
+      const gained = fnow ? fnow.recommendations.length - (before.frecs || 0) : 0;
+      ui.toast(gained > 0 ? "Claude left " + gained + (gained === 1 ? " suggestion" : " suggestions") + " about your folders" : "Claude has nothing new to suggest", { icon: "sparkle", duration: 6000 });
+      if (gained > 0) { if (state.lens !== "files") setLens("files"); go("review"); }
     }
   }
 
@@ -371,7 +476,7 @@
     const id = btn.getAttribute("data-id");
     switch (action) {
       // connecting
-      case "connect": store.connect().catch(function (err) { renderGate(err && err.kind === "wrong-folder" ? "That folder doesn't have a skill map in it. Choose the Skill Map OS folder." : ""); }); break;
+      case "connect": store.connect().catch(function (err) { renderGate(err && err.kind === "wrong-folder" ? "That folder doesn't have a map in it. Choose the Skill and Folder Map OS folder." : ""); }); break;
       case "reconnect": store.reconnect(); break;
       case "retry": store.retry(); break;
       // Claude's jobs
@@ -419,6 +524,25 @@
         break;
       }
       // everything else
+      // the Skills / Files switch, folders and files
+      case "lens": setLens(btn.getAttribute("data-lens")); break;
+      case "scan-folders": startJob("scanfolders"); break;
+      case "review-folders": startJob("reviewfolders"); break;
+      case "drill": drill(id || null); break;
+      case "drill-to": drill(id); break;
+      case "up": up(); break;
+      case "open-file": openDrawer("file", id); break;
+      case "open-folder": openDrawer("folder", id); break;
+      case "file-on-map": fileOnMap(id); break;
+      case "ftype": { const t = btn.getAttribute("data-type"); state.ftype = state.ftype === t ? "" : t; state.pin = null; renderView(); break; }
+      case "fworth": state.fworth = !state.fworth; state.pin = null; renderView(); break;
+      case "fclear": state.ftype = ""; state.fworth = false; renderView(); break;
+      case "flist-mode": state.flistMode = btn.getAttribute("data-mode"); state.ffinding = ""; state.fsort = state.flistMode === "folders" ? { key: "bytes", dir: "desc" } : { key: "bytes", dir: "desc" }; renderView(); break;
+      case "files-sort": { const k = btn.getAttribute("data-key"); state.fsort = { key: k, dir: state.fsort.key === k && state.fsort.dir === "asc" ? "desc" : (k === "name" || k === "folder" || k === "type" ? "asc" : "desc") }; renderView(); break; }
+      case "show-finding": showFinding(btn.getAttribute("data-key")); break;
+      case "finding-on-map": findingOnMap(btn.getAttribute("data-key")); break;
+      case "frec-done": fchange(function (d) { FM.mut.decideRec(d, id, "done"); }).then(function () { ui.toast("Marked done", { actionLabel: "Undo", onAction: function () { fchange(function (d) { FM.mut.decideRec(d, id, "open"); }); } }); }); break;
+      case "frec-skip": fchange(function (d) { FM.mut.decideRec(d, id, "skipped"); }).then(function () { ui.toast("Not now", { actionLabel: "Undo", onAction: function () { fchange(function (d) { FM.mut.decideRec(d, id, "open"); }); } }); }); break;
       case "settings": go("preferences"); break;
       case "pref-add-area": V.preferences.addAreaRow($("#prefAreas")); break;
       case "pref-remove-area": btn.closest(".pref-cat").remove(); break;
@@ -436,7 +560,7 @@
     const link = e.target.closest(".nav__item, a[href^='#']");
     if (!link) return;
     const v = link.getAttribute("href").slice(1);
-    if (V[v]) { e.preventDefault(); go(v); }
+    if (V[v]) { e.preventDefault(); state.drawer = null; go(v); }
   });
 
   // The table's filter box changes only the rows, so typing never loses its place
@@ -446,8 +570,16 @@
     const rows = $("#skillRows"), count = $("#skillCount");
     if (rows) { rows.innerHTML = V.skills.rows(ctx()); if (count) count.textContent = V.skills.countText(ctx()); }
   });
+  document.addEventListener("input", function (e) {
+    if (!e.target.matches || !e.target.matches("[data-files-q]")) return;
+    state.fq = e.target.value;
+    const rows = $("#fileRows"), count = $("#fileCount");
+    if (rows) { rows.innerHTML = state.flistMode === "folders" ? window.SM.fview.folderRows(ctx()) : window.SM.fview.fileRows(ctx()); if (count) count.textContent = window.SM.fview.countText(ctx()); }
+  });
   document.addEventListener("change", function (e) {
     const t = e.target;
+    if (t.matches && t.matches("[data-files-type]")) { state.ftype = t.value; renderView(); }
+    if (t.matches && t.matches("[data-files-finding]")) { state.ffinding = t.value; renderView(); }
     if (t.matches && t.matches("[data-skills-origin]")) { state.skillsOrigin = t.value; renderView(); }
     if (t.matches && t.matches("[data-skill-area]")) {
       const id = t.getAttribute("data-id"), area = t.value;
@@ -464,7 +596,13 @@
     if (kind === "preferences") {
       const got = V.preferences.collect(form);
       if (got.error) return ui.toast(got.error, { icon: "alert", duration: 6000 });
-      change(function (d) { mut.setSettings(d, got.values, got.areas); }).then(function () { ui.toast("Preferences saved"); renderChrome(); });
+      change(function (d) { mut.setSettings(d, got.values, got.areas); }).then(function () {
+        const before = fdata ? fdata.settings.roots.join("\n") : "";
+        return fchange(function (d) { FM.mut.setRoots(d, got.roots); }).then(function () {
+          ui.toast(fdata && got.roots.join("\n") !== before ? "Preferences saved. Scan your folders again to use the new list" : "Preferences saved");
+          renderChrome();
+        });
+      });
       return;
     }
     if (kind === "add-tag") {
@@ -501,10 +639,18 @@
   const searchInput = $("#searchInput"), results = $("#searchResults");
   function renderResults() {
     if (!searchInput.value.trim()) { results.hidden = true; return; }
+    if (state.lens === "files") {
+      const r = fdata ? FM.search(fdata, searchInput.value) : [];
+      results.innerHTML = r.length ? r.map(function (n) {
+        return '<button type="button" class="menu-item" role="option" data-result="' + esc(n.id) + '" data-kind="' + n.kind + '">' + icon(n.kind === "folder" ? "folder" : "fileText") + '<span class="menu-item__text">' + esc(n.name) + '</span><span class="menu-item__sub">' + esc(n.path) + "</span></button>";
+      }).join("") : '<p class="search-results__none">Nothing matches \u201c' + esc(searchInput.value.trim()) + "\u201d</p>";
+      results.hidden = false;
+      return;
+    }
     const r = M.search(data, searchInput.value);
     results.innerHTML = r.length ? r.map(function (n) {
       return '<button type="button" class="menu-item" role="option" data-result="' + esc(n.id) + '">' + icon("sparkle") + '<span class="menu-item__text">' + esc(n.name) + '</span><span class="menu-item__sub">' + esc(n.source) + "</span></button>";
-    }).join("") : '<p class="search-results__none">Nothing matches “' + esc(searchInput.value.trim()) + "”</p>";
+    }).join("") : '<p class="search-results__none">Nothing matches \u201c' + esc(searchInput.value.trim()) + "\u201d</p>";
     results.hidden = false;
   }
   searchInput.addEventListener("input", function () { if (data) renderResults(); });
@@ -525,6 +671,11 @@
     if (!b) return;
     results.hidden = true;
     searchInput.value = "";
+    if (state.lens === "files") {
+      if (b.dataset.kind === "folder") { drill(b.dataset.result); openDrawer("folder", b.dataset.result); }
+      else fileOnMap(b.dataset.result);
+      return;
+    }
     state.flyTo = b.dataset.result;
     if (state.view === "map") { renderView(); }
     openDrawer("skill", b.dataset.result);
@@ -548,7 +699,9 @@
     if (typing || e.metaKey || e.ctrlKey || e.altKey || document.querySelector("dialog[open]")) return;
     if (e.key === "/") { e.preventDefault(); searchInput.focus(); }
     else if (e.key === "f" || e.key === "F") { const m = V.map.controls(); if (m && state.view === "map") { e.preventDefault(); m.fit(); } }
-    else if (e.key === "s" || e.key === "S") { e.preventDefault(); startJob("scan"); }
+    else if (e.key === "s" || e.key === "S") { e.preventDefault(); startJob(state.lens === "files" ? "scanfolders" : "scan"); }
+    else if (e.key === "t" || e.key === "T") { e.preventDefault(); setLens(state.lens === "files" ? "skills" : "files"); }
+    else if ((e.key === "u" || e.key === "U") && state.lens === "files" && state.view === "map") { e.preventDefault(); up(); }
     else if (/^[1-9]$/.test(e.key)) { const v = VIEW_ORDER[Number(e.key) - 1]; if (v) go(v); }
   });
 
@@ -583,8 +736,9 @@
 
   renderGate();
   store.start().then(function () {
+    fstore.start().catch(function () { /* no folder map file yet: the Files side shows its welcome card */ });
     loadToolkit();
-    if (store.isHelper()) fetch("/api/claude/status", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (st) { if ((st.running || st.queued) && /^skill-map:/.test(st.job || "")) { claude.jobs.push(/scan/.test(st.job) ? "scan" : /group/.test(st.job) ? "group" : "review"); watchClaude(); } }).catch(function () {});
+    if (store.isHelper()) fetch("/api/claude/status", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (st) { if ((st.running || st.queued) && /^skill-map:/.test(st.job || "")) { claude.jobs.push(/scan-my-folders/.test(st.job) ? "scanfolders" : /review-my-folders/.test(st.job) ? "reviewfolders" : /scan/.test(st.job) ? "scan" : /group/.test(st.job) ? "group" : "review"); watchClaude(); } }).catch(function () {});
     if (/^https?:$/.test(location.protocol)) fetch("/api/info", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (info) { C.setFolder(info.folder); }).catch(function () {});
   });
 })();

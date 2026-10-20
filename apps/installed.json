@@ -2,9 +2,12 @@
   "tools": [
     {
       "id": "skill-map",
-      "name": "Skill Map OS",
+      "name": "Skill and Folder Map OS",
       "app": "apps/skill-map/",
-      "dataFiles": ["apps/skill-map/data/skillmap.json"]
+      "dataFiles": [
+        "apps/skill-map/data/skillmap.json",
+        "apps/skill-map/data/filemap.json"
+      ]
     }
   ]
 }

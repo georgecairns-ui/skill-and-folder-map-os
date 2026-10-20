@@ -54,18 +54,15 @@
     let builtAt = 0, animateIn = true, dirty = true, fitted = false, autoFit = true;
     let particles = [], nextSpawn = 0, spawnPool = [];
 
+    // The map is always drawn dark, with its own glowing palette (so it reads the same in the light and dark app theme)
+    const NEON = ["#34e5ff", "#ff4fd8", "#9dff5c", "#ffb347", "#8f7bff", "#ff6b6b", "#2effb5", "#ff9bd2", "#5aa2ff"];
     function readColours() {
-      return {
-        ink: css("--color-ink"), muted: css("--color-muted"), faint: css("--color-faint"), bg: css("--color-bg"), surface: css("--color-surface"),
-        line: css("--color-line-strong"), accent: css("--color-accent"), danger: css("--color-danger"), info: css("--color-info"), warning: css("--color-warning"),
-        onAccent: css("--color-on-accent"), font: css("--font-ui") || "sans-serif"
-      };
+      return { ink: "#f2f7ff", muted: "#8ea0c0", faint: "#5b6b8a", bg: "#04060d", line: "#2a3a5c", accent: "#34e5ff", danger: "#ff4d6d", info: "#5aa2ff", warning: "#ffb347", onAccent: "#04141c", font: css("--font-ui") || "sans-serif" };
     }
-    // The theme gives 9 group colours. A tenth group and beyond take the same colours turned round the colour wheel, so no two groups match
+    // Nine glowing group colours. A tenth group and beyond take the same colours turned round the colour wheel, so no two groups match
     function groupColour(i) {
-      const list = window.SM.model.GROUP_COLOURS;
-      const base = css(list[i % list.length]);
-      const round = Math.floor(i / list.length);
+      const base = NEON[i % NEON.length];
+      const round = Math.floor(i / NEON.length);
       return round ? turn(base, round) : base;
     }
     function turn(colour, round) {
@@ -269,89 +266,99 @@
 
     function draw(now) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, W, H);
+      // The stage is always dark and glowing, in both the light and the dark app theme
+      const bg = ctx.createRadialGradient(W * 0.5, H * 0.46, 0, W * 0.5, H * 0.46, Math.max(W, H) * 0.75);
+      bg.addColorStop(0, "#0a1226"); bg.addColorStop(0.55, "#060a17"); bg.addColorStop(1, "#02040a");
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
       if (!nodes.length) return;
+      // A faint grid that moves with the map
+      const gs = Math.max(26, Math.min(90, 52 * T.k));
+      ctx.fillStyle = "rgba(120,170,255,0.10)";
+      for (let gx = ((T.x % gs) + gs) % gs; gx < W; gx += gs) for (let gy = ((T.y % gs) + gs) % gs; gy < H; gy += gs) ctx.fillRect(gx - 0.5, gy - 0.5, 1.2, 1.2);
+
       const focus = selected && byId[selected] ? lit(selected) : null;
       const hoverSet = !focus && hover && byId[hover] ? lit(hover) : null;
       const P = {};
       nodes.forEach(function (n) { P[n.id] = pos(n, now); });
       function dimmed(n) { return !passes(n) || (focus && !focus.has(n.id)); }
+      function colourOf(n) { return n.colour || (n.kind === "core" ? col.accent : groups[n.group] ? groups[n.group].css : col.accent); }
+      function halo(x, y, r, c, a) { if (a <= 0.01) return; ctx.globalAlpha = Math.min(1, a); ctx.drawImage(sprite(c), x - r, y - r, r * 2, r * 2); ctx.globalAlpha = 1; }
 
       ctx.save();
       ctx.translate(T.x, T.y); ctx.scale(T.k, T.k);
       ctx.lineCap = "round";
+      ctx.globalCompositeOperation = "lighter";
+      const lw = 1 / Math.max(T.k, 0.6);
 
-      // Spokes, then the links from the centre
-      ctx.lineWidth = 1 / Math.max(T.k, 0.6);
-      [false, true].forEach(function (dim) {
-        ctx.beginPath();
-        links.forEach(function (l) {
-          if (l.type !== "spoke") return;
-          const s = byId[l.s], t = byId[l.t];
-          if (dimmed(t) !== dim) return;
-          const g = Math.min(grown(s, now), grown(t, now));
-          if (g <= 0) return;
-          ctx.moveTo(P[s.id].x, P[s.id].y);
-          ctx.lineTo(P[s.id].x + (P[t.id].x - P[s.id].x) * Math.min(1, g), P[s.id].y + (P[t.id].y - P[s.id].y) * Math.min(1, g));
-        });
-        ctx.strokeStyle = alpha(col.line, dim ? 0.12 : 0.55);
-        ctx.stroke();
+      // Spokes: each hub to its dots
+      links.forEach(function (l) {
+        if (l.type !== "spoke") return;
+        const s = byId[l.s], t = byId[l.t];
+        const g = Math.min(grown(s, now), grown(t, now));
+        if (g <= 0) return;
+        const dim = dimmed(t);
+        const ex = P[s.id].x + (P[t.id].x - P[s.id].x) * Math.min(1, g), ey = P[s.id].y + (P[t.id].y - P[s.id].y) * Math.min(1, g);
+        ctx.beginPath(); ctx.moveTo(P[s.id].x, P[s.id].y); ctx.lineTo(ex, ey);
+        ctx.lineWidth = lw * 1.1; ctx.strokeStyle = alpha(colourOf(s), dim ? 0.05 : 0.34); ctx.stroke();
       });
+      // The links from the centre to each hub: a wide soft glow under a thin bright line
       links.forEach(function (l) {
         if (l.type !== "hub") return;
         const s = byId[l.s], t = byId[l.t];
         const g = Math.min(1, grown(t, now));
         if (g <= 0) return;
-        const dm = dimmed(t);
-        ctx.beginPath(); ctx.moveTo(P[s.id].x, P[s.id].y);
-        ctx.lineTo(P[s.id].x + (P[t.id].x - P[s.id].x) * g, P[s.id].y + (P[t.id].y - P[s.id].y) * g);
-        ctx.lineWidth = 1.6 / Math.max(T.k, 0.6);
-        ctx.strokeStyle = alpha(groups[t.group] ? groups[t.group].css : col.line, dm ? 0.1 : 0.45);
-        ctx.stroke();
+        const dm = dimmed(t), c = colourOf(t);
+        const ex = P[s.id].x + (P[t.id].x - P[s.id].x) * g, ey = P[s.id].y + (P[t.id].y - P[s.id].y) * g;
+        ctx.beginPath(); ctx.moveTo(P[s.id].x, P[s.id].y); ctx.lineTo(ex, ey);
+        ctx.lineWidth = lw * 7; ctx.strokeStyle = alpha(c, dm ? 0.015 : 0.07); ctx.stroke();
+        ctx.lineWidth = lw * 1.7; ctx.strokeStyle = alpha(c, dm ? 0.1 : 0.62); ctx.stroke();
       });
 
-      // Links between skills: all of them with Links on, otherwise only around the selected or hovered dot
+      // Links between items: all of them with Links on, otherwise only around the selected or hovered dot
       const around = focus ? selected : hover && hoverSet ? hover : null;
       links.forEach(function (l) {
         if (l.type !== "ref" && l.type !== "dup") return;
         const touching = around && (l.s === around || l.t === around);
-        if (!showLinks && !touching) return;
+        if (!showLinks && !touching && l.type !== "dup") return;
         const s = byId[l.s], t = byId[l.t];
         if (grown(s, now) < 1 || grown(t, now) < 1) return;
         const a = P[s.id], b = P[t.id];
         const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y;
-        const bend = 0.18;
         ctx.beginPath(); ctx.moveTo(a.x, a.y);
-        ctx.quadraticCurveTo(mx - dy * bend, my + dx * bend, b.x, b.y);
-        ctx.lineWidth = (touching ? 1.6 : 0.9) / Math.max(T.k, 0.7);
+        ctx.quadraticCurveTo(mx - dy * 0.18, my + dx * 0.18, b.x, b.y);
+        ctx.lineWidth = (touching ? 1.8 : 1.1) * lw;
         const dim = !touching && (dimmed(s) || dimmed(t));
-        if (l.type === "dup") { ctx.setLineDash([4 / T.k, 3 / T.k]); ctx.strokeStyle = alpha(col.danger, dim ? 0.1 : touching ? 0.9 : 0.5); }
-        else { ctx.setLineDash([]); ctx.strokeStyle = alpha(col.info, dim ? 0.08 : touching ? 0.9 : 0.3); }
-        ctx.stroke();
-        ctx.setLineDash([]);
+        if (l.type === "dup") { ctx.setLineDash([4 / T.k, 3 / T.k]); ctx.strokeStyle = alpha(col.danger, dim ? 0.1 : touching ? 0.95 : 0.55); }
+        else { ctx.setLineDash([]); ctx.strokeStyle = alpha("#5aa2ff", dim ? 0.08 : touching ? 0.95 : 0.38); }
+        ctx.stroke(); ctx.setLineDash([]);
       });
 
-      // Pulses travelling out to the skills that are used
+      // Pulses travelling out to the active dots, each with a short comet tail
       if (!reduce() && !document.hidden && spawnPool.length) {
-        if (now > nextSpawn && particles.length < Math.min(40, 6 + spawnPool.length)) {
+        if (now > nextSpawn && particles.length < Math.min(44, 8 + spawnPool.length)) {
           let total = 0; spawnPool.forEach(function (n) { total += n.uses; });
           let pick = Math.random() * total, target = spawnPool[0];
           for (let i = 0; i < spawnPool.length; i++) { pick -= spawnPool[i].uses; if (pick <= 0) { target = spawnPool[i]; break; } }
           particles.push({ to: target, at: now, ms: 1500 + Math.random() * 900 });
-          nextSpawn = now + 140 + Math.random() * 260;
+          nextSpawn = now + 130 + Math.random() * 240;
         }
         particles = particles.filter(function (p) { return now - p.at < p.ms; });
         particles.forEach(function (p) {
-          const t = (now - p.at) / p.ms;
           const hub = byId[p.to.hub];
           if (!hub || grown(p.to, now) < 1 || dimmed(p.to)) return;
-          let x, y;
-          if (t < 0.5) { const u = ease(t / 0.5); x = P.core.x + (P[hub.id].x - P.core.x) * u; y = P.core.y + (P[hub.id].y - P.core.y) * u; }
-          else { const u = ease((t - 0.5) / 0.5); x = P[hub.id].x + (P[p.to.id].x - P[hub.id].x) * u; y = P[hub.id].y + (P[p.to.id].y - P[hub.id].y) * u; }
-          const c = groups[p.to.group] ? groups[p.to.group].css : col.accent;
-          const fade = Math.sin(Math.min(1, t) * Math.PI);
-          ctx.beginPath(); ctx.arc(x, y, 5.5, 0, TAU); ctx.fillStyle = alpha(c, 0.16 * fade); ctx.fill();
-          ctx.beginPath(); ctx.arc(x, y, 2, 0, TAU); ctx.fillStyle = alpha(c, 0.95 * fade); ctx.fill();
+          const c = colourOf(p.to);
+          const at = function (t) {
+            if (t < 0.5) { const u = ease(Math.max(0, t) / 0.5); return { x: P.core.x + (P[hub.id].x - P.core.x) * u, y: P.core.y + (P[hub.id].y - P.core.y) * u }; }
+            const u = ease(Math.min(1, (t - 0.5) / 0.5)); return { x: P[hub.id].x + (P[p.to.id].x - P[hub.id].x) * u, y: P[hub.id].y + (P[p.to.id].y - P[hub.id].y) * u };
+          };
+          const t = (now - p.at) / p.ms, fade = Math.sin(Math.min(1, t) * Math.PI);
+          for (let i = 5; i >= 0; i--) {
+            const q = at(t - i * 0.022);
+            halo(q.x, q.y, 6 - i * 0.7, c, fade * (0.9 - i * 0.14));
+          }
+          const h = at(t);
+          ctx.beginPath(); ctx.arc(h.x, h.y, 1.8, 0, TAU); ctx.fillStyle = alpha("#ffffff", 0.95 * fade); ctx.fill();
         });
       }
 
@@ -359,37 +366,45 @@
       nodes.forEach(function (n) {
         const g = grown(n, now);
         if (g <= 0) return;
-        const p = P[n.id], dm = dimmed(n);
-        const c = n.kind === "core" ? col.accent : groups[n.group] ? groups[n.group].css : col.accent;
+        const p = P[n.id], dm = dimmed(n), c = colourOf(n);
         const r = n.r * g;
         const isSel = selected === n.id;
         if (n.kind === "core") {
           const pulse = reduce() ? 0 : Math.sin(now / 900) * 2;
-          ctx.beginPath(); ctx.arc(p.x, p.y, r + 8 + pulse, 0, TAU); ctx.fillStyle = alpha(col.accent, 0.12); ctx.fill();
-          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.fillStyle = col.accent; ctx.fill();
-          sparkle(p.x, p.y, r * 0.55, col.onAccent);
+          halo(p.x, p.y, r * 5.2 + pulse * 2, col.accent, 0.55);
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.fillStyle = "#e8fbff"; ctx.fill();
+          const spin = reduce() ? 0 : now / 1700;
+          ctx.lineWidth = 2 * lw; ctx.strokeStyle = alpha(col.accent, 0.9);
+          for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(p.x, p.y, r + 8, spin + i * 2.094, spin + i * 2.094 + 1.2); ctx.stroke(); }
+          ctx.globalCompositeOperation = "source-over"; sparkle(p.x, p.y, r * 0.55, "#04141c"); ctx.globalCompositeOperation = "lighter";
           return;
         }
         if (n.kind === "hub") {
-          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU);
-          ctx.fillStyle = alpha(c, dm ? 0.06 : 0.16); ctx.fill();
-          ctx.lineWidth = isSel ? 3 : 1.6; ctx.strokeStyle = alpha(c, dm ? 0.25 : 0.95); ctx.stroke();
+          halo(p.x, p.y, r * 2.6, c, dm ? 0.1 : 0.42);
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.fillStyle = alpha(c, dm ? 0.05 : 0.14); ctx.fill();
+          ctx.lineWidth = (isSel ? 3 : 2) * lw; ctx.strokeStyle = alpha(c, dm ? 0.25 : 1); ctx.stroke();
+          const spin = reduce() ? 0 : now / 2600 * (n.group % 2 ? 1 : -1);
+          ctx.setLineDash([3 / T.k, 7 / T.k]); ctx.lineDashOffset = spin * 40;
+          ctx.beginPath(); ctx.arc(p.x, p.y, r + 7, 0, TAU); ctx.lineWidth = lw; ctx.strokeStyle = alpha(c, dm ? 0.08 : 0.5); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+          if (n.flagged && !dm) { ctx.beginPath(); ctx.arc(p.x + r * 0.78, p.y - r * 0.78, 3.2, 0, TAU); ctx.fillStyle = alpha(col.danger, 1); ctx.fill(); }
           return;
         }
-        const recent = n.uses > 0 && !reduce();
-        if (recent && !dm) {
-          const breathe = 0.5 + 0.5 * Math.sin(now / 1100 + n.ph);
-          ctx.beginPath(); ctx.arc(p.x, p.y, r + 3 + breathe * 4, 0, TAU); ctx.fillStyle = alpha(c, 0.1 + breathe * 0.1); ctx.fill();
-        }
+        const bright = n.uses > 0 && !dm;
+        const breathe = reduce() ? 0.5 : 0.5 + 0.5 * Math.sin(now / 1100 + n.ph);
+        if (bright) halo(p.x, p.y, r * (3.4 + breathe * 1.2), c, 0.26 + breathe * 0.2);
+        else if (!dm) halo(p.x, p.y, r * 2.4, c, 0.1);
         ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU);
-        if (n.uses > 0) { ctx.fillStyle = alpha(c, dm ? 0.15 : 1); ctx.fill(); }
-        else { ctx.fillStyle = alpha(col.bg, dm ? 0.4 : 1); ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = alpha(c, dm ? 0.18 : 0.85); ctx.stroke(); }
-        if (n.skillKind === "command") { ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.9, r * 0.32), 0, TAU); ctx.fillStyle = alpha(col.bg, dm ? 0.3 : 0.9); ctx.fill(); }
-        if (isSel || hover === n.id) {
-          ctx.beginPath(); ctx.arc(p.x, p.y, r + 3.5, 0, TAU); ctx.lineWidth = isSel ? 2 : 1.4; ctx.strokeStyle = isSel ? col.ink : alpha(col.ink, 0.5); ctx.stroke();
+        if (n.uses > 0) { ctx.fillStyle = alpha(c, dm ? 0.14 : 1); ctx.fill(); ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.7, r * 0.42), 0, TAU); ctx.fillStyle = alpha("#ffffff", dm ? 0.1 : 0.85); ctx.fill(); }
+        else { ctx.fillStyle = alpha("#04060d", dm ? 0.4 : 0.9); ctx.fill(); ctx.lineWidth = 1.5 * lw; ctx.strokeStyle = alpha(c, dm ? 0.18 : 0.9); ctx.stroke(); }
+        if (n.skillKind === "command") { ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.9, r * 0.3), 0, TAU); ctx.fillStyle = alpha("#04060d", dm ? 0.3 : 0.9); ctx.fill(); }
+        if (n.flag && !dm) {
+          const q = reduce() ? 1 : 0.65 + 0.35 * Math.sin(now / 500 + n.ph);
+          ctx.beginPath(); ctx.arc(p.x, p.y, r + 3.4, 0, TAU); ctx.lineWidth = 1.3 * lw; ctx.strokeStyle = alpha(col.danger, 0.9 * q); ctx.stroke();
         }
+        if (isSel || hover === n.id) { ctx.beginPath(); ctx.arc(p.x, p.y, r + 4.5, 0, TAU); ctx.lineWidth = (isSel ? 2 : 1.4) * lw; ctx.strokeStyle = isSel ? "#ffffff" : alpha("#ffffff", 0.55); ctx.stroke(); }
       });
       ctx.restore();
+      ctx.globalCompositeOperation = "source-over";
 
       // Words, drawn at screen size so they stay crisp
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -403,26 +418,44 @@
         if (n.kind === "hub") {
           const r = n.r * T.k;
           ctx.font = "700 " + Math.max(10, Math.min(13, 12 * Math.sqrt(T.k) + 1)) + "px " + col.font;
-          ctx.fillStyle = dm ? alpha(col.ink, 0.3) : col.ink;
+          ctx.fillStyle = dm ? "rgba(234,242,255,0.3)" : "#f2f7ff";
           if (r > 11) ctx.fillText(String(n.count), sx, sy);
-          label(n.label, sx, sy + r + 12, dm ? 0.35 : 1, true);
+          label(n.label, sx, sy + r + 14, dm ? 0.4 : 1, true);
         } else if (n.kind === "skill") {
           const sel = selected === n.id || hover === n.id;
           const show = sel || (focus && focus.has(n.id) && T.k > 0.9) || (T.k >= 2.4) || (T.k >= 1.5 && n.r > 4.8 && !dm);
-          if (show && !(dm && !sel)) label(n.label, sx, sy + (n.r * T.k) + 10, 1, sel);
+          if (show && !(dm && !sel)) label(n.label, sx, sy + (n.r * T.k) + 11, 1, sel);
+        } else if (n.kind === "core" && T.k > 0.3) {
+          label(n.label, sx, sy + n.r * T.k + 26, 1, true);
         }
       });
+      // A soft vignette pulls the eye to the middle
+      const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.78);
+      vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,0.5)");
+      ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     }
     function label(text, x, y, a, strong) {
+      const t = text.length > 28 ? text.slice(0, 27) + "…" : text;
       ctx.font = (strong ? "650 " : "500 ") + "11.5px " + col.font;
-      ctx.lineWidth = 3.5; ctx.lineJoin = "round";
-      ctx.strokeStyle = alpha(col.bg, 0.92 * a); ctx.strokeText(text, x, y);
-      ctx.fillStyle = alpha(strong ? col.ink : col.muted, a); ctx.fillText(text, x, y);
+      ctx.lineWidth = 4; ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(3,6,14," + (0.92 * a) + ")"; ctx.strokeText(t, x, y);
+      ctx.fillStyle = strong ? "rgba(242,247,255," + a + ")" : "rgba(160,178,210," + a + ")"; ctx.fillText(t, x, y);
     }
     function sparkle(x, y, r, colour) {
       ctx.beginPath();
       for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 - Math.PI / 2, rr = i % 2 ? r * 0.34 : r; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
       ctx.closePath(); ctx.fillStyle = colour; ctx.fill();
+    }
+    // A soft glowing ball in one colour, drawn once and stamped wherever a glow is needed
+    const sprites = {};
+    function sprite(colour) {
+      if (sprites[colour]) return sprites[colour];
+      const c = document.createElement("canvas"); c.width = c.height = 96;
+      const x = c.getContext("2d"), g = x.createRadialGradient(48, 48, 0, 48, 48, 48);
+      g.addColorStop(0, alpha(colour, 1)); g.addColorStop(0.28, alpha(colour, 0.45)); g.addColorStop(1, alpha(colour, 0));
+      x.fillStyle = g; x.fillRect(0, 0, 96, 96);
+      sprites[colour] = c;
+      return c;
     }
 
     // ---------- The loop ----------
