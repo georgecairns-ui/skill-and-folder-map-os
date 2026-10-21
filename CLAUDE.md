@@ -32,11 +32,11 @@ If `context/business.md` still says "Status: not filled in yet", skills can't be
 
 ## The rules that never bend
 
-1. **You map and suggest, you never act.** Scan, group skills into areas, and add suggestions to Review. Never edit, move, rename or delete a skill, a file or a folder, anywhere, for any reason. The only exception is a specific action they ask for about their own files in this folder (`context/`, `files/`, `setup/progress.md`), and even then confirm the exact thing first.
+1. **You map and suggest. You act only on a Fix button they pressed.** Scan, group skills into areas, and add suggestions to Review: none of that changes a skill, a file or a folder. The only exception is a Fix button they pressed and confirmed in the plain-English box, which you carry out through the `tidy-up` skill (it moves or renames, never deletes, only inside the folders they chose and their own skill folders, and records every move so it can be undone). Outside that, never edit, move, rename or delete a skill, a file or a folder, anywhere, for any reason, apart from a specific action they ask for about their own files in this folder (`context/`, `files/`, `setup/progress.md`), and even then confirm the exact thing first.
 2. **Never type a number into either map.** Counts, uses and totals in `apps/skill-map/data/skillmap.json`, and counts, sizes and totals in `apps/skill-map/data/filemap.json`, always come from a scan. You set `area` and `areaBy: "claude"`, and write `recommendations` in both files. You never overwrite an area the person set themselves (`areaBy: "you"`), and you never touch `tags`, `settings` or a skill they added by hand.
 3. **Folders: only the ones they chose.** The folder scan looks only in the folders listed in `settings.roots` of `filemap.json` (set in Preferences). Never open a file, never read what's inside one, never scan a folder they haven't chosen.
 4. **Nothing secret in this folder.** No passwords, keys or codes in any file here, and never ask for them in chat. See `.claude/skills/connect-a-tool`.
-5. **Never delete their files.** Old things go to `files/99-archive`.
+5. **Never delete their files.** Old things in this toolkit go to `files/99-archive`. A Fix button never deletes either: tidied files go into a "Tidied by Claude" folder inside the same chosen folder, retired skills into an archive folder next to their own, and every tidy-up can be undone from "Tidied so far".
 6. **Keep private things private.** A skill's name and description are enough to work with. Don't copy what anyone typed into a skill, the body of a file beyond its description, or what's inside a file the folder scan finds, into notes here.
 
 ## Where things live
@@ -66,6 +66,7 @@ When a request matches a skill in `.claude/skills/`, read that skill's `SKILL.md
 | "Review my skills", "which skills do I never use?" | `.claude/skills/review-my-skills` |
 | "Scan my folders", "map my files", "what's in my folders?" | `.claude/skills/scan-my-folders` |
 | "Review my folders", "what should I tidy?", "clean up my files", "what's taking up space?" | `.claude/skills/review-my-folders` |
+| They pressed a Fix button, or "tidy up what I asked for" | `.claude/skills/tidy-up` |
 | "Open my map", "it's not loading" | `.claude/skills/open-task-list` (it starts the app for every tool in this folder) |
 | "Sort my brain dump", a messy note (and every note from the Brain dump button) | `.claude/skills/sort-brain-dump` (shared by every tool) |
 | "Make this sound less robotic", any text you write | `.claude/skills/human-email` |
@@ -85,8 +86,8 @@ Any text you draft for them follows `.claude/skills/human-email` and uses `conte
 - New or ungrouped skills after a scan: group them by what they do (`group-my-skills`), leaving any you're not sure of ungrouped rather than guessing.
 - Spotted a name used twice, a skill gone quiet, overlapping descriptions or an empty area? Add a suggestion to Review (`review-my-skills`). Don't just mention it and forget it.
 - "Scan my folders": run the folder scan, report the one-line summary it prints, and stop. Don't review in the same breath unless they ask.
-- Spotted duplicates, old or oversized files, old downloads, installers, untidy names, or a crowded, empty or deeply buried folder? Add a suggestion to Review (`review-my-folders`). Never move, rename, edit, open or delete the file or folder itself.
-- A suggestion they approve is theirs to carry out, on their own computer or in their own Claude setup. You can tell them how; you don't do it yourself.
+- Spotted duplicates, old or oversized files, old downloads, installers, untidy names, or a crowded, empty or deeply buried folder? Add a suggestion to Review (`review-my-folders`). Never move, rename, edit, open or delete the file or folder yourself: it changes only when they press a Fix button, through `tidy-up`.
+- A suggestion they approve is theirs to carry out, or they press its Fix button and you run `tidy-up`. Without a Fix button press, you can tell them how; you don't do it yourself.
 - Change how the app looks only when asked, by editing `apps/shared/theme.css`. The business area names and the folders it scans are in Preferences. See `docs/CUSTOMISING.md`.
 
 ## Keeping your notes current

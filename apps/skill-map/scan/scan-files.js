@@ -15,7 +15,7 @@
   listed in Preferences (settings.roots). It never opens a file, never reads what is inside one, never
   follows a shortcut out of a chosen folder, and never changes, moves or deletes anything.
 
-  It skips hidden items (names starting with a dot), node_modules, the Library folder of a home folder
+  It skips hidden items (names starting with a dot), node_modules, the "Tidied by Claude" folders it makes itself, the Library folder of a home folder
   and the inside of app and photo-library bundles (they show up as one item).
 
   A re-scan keeps the person's settings and the suggestions Claude left.
@@ -47,7 +47,7 @@ const DOWNLOAD_DAYS = 90;
 const LOOSE_FILES = 100;
 const DEEP_DEPTH = 7;
 
-const SKIP_DIRS = new Set(["node_modules", "__pycache__", ".git", ".trash", "$recycle.bin", "venv", ".venv"]);
+const SKIP_DIRS = new Set(["node_modules", "__pycache__", ".git", ".trash", "$recycle.bin", "venv", ".venv", "tidied by claude"]);
 const BUNDLE_EXT = new Set([".app", ".photoslibrary", ".xcodeproj", ".bundle", ".framework", ".rtfd", ".pages", ".numbers", ".key", ".sketch"]);
 const TYPES = {
   document: ["doc", "docx", "pdf", "txt", "md", "rtf", "odt", "pages", "gdoc", "epub"],

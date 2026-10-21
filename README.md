@@ -4,7 +4,7 @@
 
 Skill and Folder Map OS draws 2 maps on one app, switched with a Skills | Files switch at the top. The **Skills** map finds every skill and command Claude can use on your computer and draws them as one map: Claude in the middle, a hub for each part of your business, a dot for each skill. The bigger the dot, the more it's been used in the last 90 days. The **Files** map looks through the folders you choose and draws them the same way: click a folder to go inside it, all the way down to a single file, and see what's taking up space, what's doubled up and what's worth tidying.
 
-It only reads. Skill and Folder Map OS never edits, moves, deletes or sends anything, and nothing it finds leaves your computer.
+Scanning only reads. Skill and Folder Map OS looks at names, sizes and dates and never opens a file. It changes something only when you press a Fix button and confirm, it never deletes anything, every tidy-up can be undone, and nothing it finds leaves your computer.
 
 Skill and Folder Map OS is part of a toolkit of 9 free tools from Get AI Powers. The others (a task list, Pipeline OS, proposals and more) show in the app's menu, and Get AI Powers sets them up with you on a free call.
 
@@ -28,7 +28,7 @@ The **Skills | Files** switch at the top (or the T key) moves the whole app betw
 - **Shows every skill in a list too.** The **All skills** page is the same map as a sortable, filterable table: name, where it's from, how often it's used, when it was last used.
 - **Counts what you've got.** The **Overview** page: how many skills, how many used lately, how many uses, how many gone quiet, how many share a name, which ones are used most, use by month and where your skills come from.
 - **Finds the gaps.** The **Gaps** page shows every part of your business as a card: the skills already there, or "Nothing here yet" with 3 ideas for what a skill could do. It's the page worth sharing on a call.
-- **Suggests, never acts.** The **Review** page holds what Claude has spotted: a name used twice (and which to keep), a skill nobody's touched in 90 days, descriptions that overlap, a gap worth filling. Claude only suggests. You mark each one Done or Not now.
+- **Suggests first, tidies when you say.** The **Review** page holds what Claude has spotted: a name used twice (and which to keep), a skill nobody's touched in 90 days, descriptions that overlap, a gap worth filling. Press **Keep one copy** or **Retire them** and Claude does it: the spare skills move into an archive folder next to their own, nothing is deleted, and you can undo it. Nothing changes until you press the button.
 
 **Files side:**
 
@@ -36,7 +36,7 @@ The **Skills | Files** switch at the top (or the T key) moves the whole app betw
 - **Shows every file in a list too.** The **All files** page is the same map as a sortable table, with a Files/Folders switch.
 - **Counts what you've got.** The **Overview** page: how many files and folders, what they're made of, your biggest folders and files.
 - **Finds what needs tidying.** The **Clean-up** page, biggest first: duplicate files, very big files, big files untouched for 2 years, old files in Downloads, installers, untidy names, crowded folders, empty folders, folders buried many levels down. Each one has a "See them" and "Find on the map" link.
-- **Suggests, never acts.** The **Review** page holds Claude's tidy-up suggestions, plus the duplicate sets. Claude only suggests. You mark each one Done or Not now.
+- **Tidies when you say.** Each finding on the Clean-up page has a Fix button: **Move them out of the way**, **Keep one copy of each**, **Clear them away**, **Give them clearer names** or **Sort them out**. A box tells you in plain English exactly what will happen, and nothing changes until you press the button in it. Files go into a **Tidied by Claude** folder inside the same folder, never the bin, so nothing is deleted. Every tidy-up is listed under **Tidied so far** with an Undo button. The **Review** page holds Claude's tidy-up suggestions, plus the duplicate sets.
 
 Both sides: **keep your choices** (scan again any time and it keeps the tags, groups and settings you've already chosen), and are **yours to shape** (your own business area names, which folders to scan, your own colours, in light or dark).
 
@@ -73,7 +73,7 @@ Then it opens your map and gives you its link, **http://localhost:4747**. Bookma
 
 ## Your information
 
-Your maps live in this folder on your computer, in 2 files. Claude reads your `.claude` folder, your installed plugins and this kit's own skills to build the skills map, and the folders you choose to build the folder map; it never edits, moves or deletes a skill, a file or a folder, and nothing it finds is sent anywhere. There's no Skill and Folder Map OS account or server; Get AI Powers can't see any of it. Read [docs/PRIVACY-AND-SAFETY.md](docs/PRIVACY-AND-SAFETY.md) for the detail.
+Your maps live in this folder on your computer, in 3 files (the 2 maps, and a note of what has been tidied). Claude reads your `.claude` folder, your installed plugins and this kit's own skills to build the skills map, and the folders you choose to build the folder map; scanning never edits, moves or deletes anything. Tidying happens only when you press a Fix button: it moves or renames, never deletes, only inside the folders you chose and your own skill folders, and you can undo it. Nothing it finds is sent anywhere. There's no Skill and Folder Map OS account or server; Get AI Powers can't see any of it. Read [docs/PRIVACY-AND-SAFETY.md](docs/PRIVACY-AND-SAFETY.md) for the detail.
 
 ## Make it yours
 

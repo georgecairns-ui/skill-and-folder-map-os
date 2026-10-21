@@ -6,7 +6,8 @@
       "app": "apps/skill-map/",
       "dataFiles": [
         "apps/skill-map/data/skillmap.json",
-        "apps/skill-map/data/filemap.json"
+        "apps/skill-map/data/filemap.json",
+        "apps/skill-map/data/tidy.json"
       ]
     }
   ]

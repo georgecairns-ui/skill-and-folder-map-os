@@ -484,3 +484,10 @@ body.has-drawer .map-hint { display: none; }
 @media (max-width: 1000px) { .map-stage[data-style="neon"] .map-legend { border-top-color: #16213a; } .map-stage[data-style="pastel"] .map-legend { border-top-color: var(--color-line); } }
 
 .map-stage { min-height: 460px; }
+
+/* Fix buttons: the reassurance in the "Are you sure?" box, and the "Tidied so far" list */
+.tidy-safe { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-m, 12px); background: var(--surface-sunken, rgba(127, 127, 127, 0.1)); font-size: 0.9rem; }
+.tidy-safe svg { flex: none; width: 18px; height: 18px; margin-top: 2px; }
+.tidied__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.tidied__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gap__actions .btn--primary { order: -1; }

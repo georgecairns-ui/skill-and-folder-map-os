@@ -15,7 +15,7 @@
                       names. The totals count every file the scan saw
     findings          what the scan spotted: duplicates, big files, old downloads, installers, untidy names,
                       empty, crowded and deep folders
-    recommendations   what Claude suggests doing (it only suggests)
+    recommendations   what Claude suggests doing (it suggests; a Fix button acts)
 
   The scan reads names, sizes and dates only. It never opens a file. Every number on screen is worked out
   here from the scan, never typed in by Claude.

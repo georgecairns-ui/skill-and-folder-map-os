@@ -6,7 +6,7 @@ Goal: find every skill Claude can use on their computer and let them see the map
 
 One plain sentence before you start:
 
-> I'm going to look through your computer for every skill and command Claude can use, and build you a map of them. Nothing is changed or sent; I'm only reading.
+> I'm going to look through your computer for every skill and command Claude can use, and build you a map of them. Nothing is changed or sent; I'm only reading. Tidying only happens later, if you press a Fix button.
 
 ## 2. Run the scan
 

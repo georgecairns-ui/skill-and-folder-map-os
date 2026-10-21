@@ -20,6 +20,10 @@
     "review-my-folders": {
       "label": "reviewing your folders",
       "prompt": "The person has pressed Review in the Folders map in Skill and Folder Map OS. Follow .claude/skills/review-my-folders: read apps/skill-map/data/filemap.json and add suggestions to its recommendations list. Only suggest: never move, rename, edit or delete a file or folder. Change nothing else."
+    },
+    "tidy-up": {
+      "label": "tidying up",
+      "prompt": "The person has pressed a Fix button in Skill and Folder Map OS and has already seen and agreed to what it will do. Follow .claude/skills/tidy-up: work out the moves for any item that asks you to, run the tidy-up script once (node apps/skill-map/tidy/tidy.js, or python3 apps/skill-map/tidy/tidy.py if Node isn't installed), then run the matching scan once so the map is up to date. Never delete anything, never move anything yourself, change nothing else."
     }
   }
 }

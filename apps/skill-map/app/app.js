@@ -11,14 +11,14 @@
   5. Asks Claude, through the helper, to do its 3 jobs (claude-jobs.json): scan the skills, group
      them by what they do, and review them. The scan itself is a plain script that only reads.
 
-  The rule throughout: Claude suggests, the person decides. Nothing here edits, moves or deletes a
-  skill, and nothing is sent anywhere.
+  The rule throughout: Claude suggests, the person decides. Nothing changes until the person presses
+  a Fix button and confirms, nothing is ever deleted, and nothing is sent anywhere.
 */
 (function () {
   "use strict";
 
   const ui = window.TaskListOS.ui, esc = ui.esc, icon = ui.icon;
-  const M = window.SM.model, FM = window.SM.fmodel, C = window.SM.c, V = window.SM.views, Drawer = window.SM.drawer;
+  const M = window.SM.model, FM = window.SM.fmodel, TM = window.SM.tidy, C = window.SM.c, V = window.SM.views, Drawer = window.SM.drawer;
   const mut = M.mut;
   const $ = function (sel, root) { return (root || document).querySelector(sel); };
 
@@ -43,10 +43,11 @@
     lens: remembered("smos-lens", ["skills", "files"]) || "skills", focus: null, pin: null, ftype: "", fworth: false,
     fq: "", ffinding: "", flistMode: "files", fsort: { key: "bytes", dir: "desc" }
   };
-  const claude = { jobs: [], timer: null, before: null };
+  const claude = { jobs: [], timer: null, before: null, tidyIds: [] };
 
   let data = null;
   let fdata = null;
+  let tdata = null;
   let status = "checking";
   let statusDetail = {};
   const toolkit = { tools: [], installed: {}, booking: null };
@@ -99,6 +100,21 @@
       err.shownToPerson = true;
       throw err;
     });
+  }
+
+  // What the person has asked Claude to tidy, and what came of it. Missing or unreadable, the Fix buttons simply don't appear.
+  const tstore = window.TaskListOS.createStore({
+    moduleId: "skill-map-tidy",
+    fileName: "tidy.json",
+    dataPaths: ["data", "", "apps/skill-map/data"],
+    api: "/api/data/skill-map/tidy.json",
+    validate: TM.validate,
+    onStatus: function () {},
+    onData: function (d) { tdata = TM.normalise(d); render(); }
+  });
+  function tchange(fn) {
+    if (!tdata) return Promise.reject(new Error("The tidy-up list couldn\u2019t be found"));
+    return tstore.update(function (d) { TM.normalise(d); fn(d); });
   }
 
   function change(fn) {
@@ -161,7 +177,7 @@
         '<button type="button" class="btn btn--primary btn--lg" data-action="retry">' + icon("refresh") + "Try again</button>"));
     }
     showGate(gateCard("welcome", "One-time setup", "See every skill and folder you have. <span class=\"accent\">At a glance.</span>",
-      "<p>Skill and Folder Map OS finds the skills on your computer and the folders and files you keep, draws each as a map you can click into, and shows what you use, what is doubled up and what to tidy first. It only reads names, sizes and dates. It all lives in files on your own computer.</p>" +
+      "<p>Skill and Folder Map OS finds the skills on your computer and the folders and files you keep, draws each as a map you can click into, and shows what you use, what is doubled up and what to tidy first. Scanning only reads names, sizes and dates, and nothing is changed until you press a Fix button. It all lives in files on your own computer.</p>" +
       '<ol class="gate__steps"><li><span>Click <strong>Connect your map</strong>.</span></li><li><span>Choose your <strong>Skill and Folder Map OS</strong> folder, the one with START-HERE.md in it.</span></li><li><span>When Chrome asks to let this page edit files, click <strong>Allow</strong>.</span></li></ol>' +
       (message ? '<p class="gate__error" role="alert">' + icon("alert") + esc(message) + "</p>" : ""),
       '<button type="button" class="btn btn--primary btn--lg" data-action="connect">' + icon("folder") + "Connect your map</button>",
@@ -191,7 +207,7 @@
     drill: function (id) { drill(id); },
     up: function () { up(); }
   };
-  function ctx() { return { d: data, f: fdata, state: state, actions: actions, toolkit: toolkit, canScan: store.isHelper() }; }
+  function ctx() { return { d: data, f: fdata, t: tdata, state: state, actions: actions, toolkit: toolkit, canScan: store.isHelper() }; }
   // On the Files side the pages are the folder ones; the map page is shared and branches inside itself
   function viewFor(name) {
     if (state.lens === "files" && V.f && V.f[name === "skills" ? "list" : name]) return V.f[name === "skills" ? "list" : name];
@@ -369,7 +385,8 @@
     group: { name: "group-my-skills", doing: "Claude is grouping your skills", say: "Group my skills" },
     review: { name: "review-my-skills", doing: "Claude is reviewing your skills", say: "Review my skills" },
     scanfolders: { name: "scan-my-folders", doing: "Claude is looking through your folders", say: "Scan my folders" },
-    reviewfolders: { name: "review-my-folders", doing: "Claude is reviewing your folders", say: "Review my folders" }
+    reviewfolders: { name: "review-my-folders", doing: "Claude is reviewing your folders", say: "Review my folders" },
+    tidy: { name: "tidy-up", doing: "Claude is tidying up", say: "Tidy up what I asked for" }
   };
   function snapshot() {
     return { scanAt: data && data.scan ? data.scan.at : null, recs: data ? data.recommendations.length : 0, fscanAt: fdata && fdata.scan ? fdata.scan.at : null, frecs: fdata ? fdata.recommendations.length : 0 };
@@ -412,7 +429,8 @@
   // Read both files fresh to say how it went (the app's own refresh pauses while its tab is hidden)
   function finishedClaude(result) {
     function get(url) { return fetch(url, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
-    Promise.all([get("/api/data/skill-map/skillmap.json"), get("/api/data/skill-map/filemap.json")]).then(function (both) {
+    Promise.all([get("/api/data/skill-map/skillmap.json"), get("/api/data/skill-map/filemap.json"), get("/api/data/skill-map/tidy.json")]).then(function (both) {
+      if (both[2]) tdata = TM.normalise(both[2]);
       reportClaude(both[0] ? M.normalise(both[0]) : data, both[1] ? FM.normalise(both[1]) : fdata, result);
     });
   }
@@ -423,6 +441,7 @@
     if (now && now !== data) data = now;
     if (fnow && fnow !== fdata) fdata = fnow;
     render();
+    if (result === "failed" && kinds.indexOf("tidy") > -1) { claude.tidyIds = []; ui.toast("Claude couldn\u2019t finish tidying. Nothing was lost: say \u201cTidy up what I asked for\u201d to Claude in Claude Code and it will tell you why.", { icon: "alert", duration: 9000 }); return; }
     if (result === "failed") { ui.toast("Claude couldn\u2019t finish. Say \u201c" + JOBS[kinds[0] || "scan"].say + "\u201d to Claude in Claude Code and it will tell you why.", { icon: "alert", duration: 9000 }); return; }
     if (kinds.indexOf("scan") > -1) {
       const s = now && now.scan, scanned = s && s.at && s.at !== before.scanAt;
@@ -443,11 +462,58 @@
       if (!scanned) ui.toast("The folder scan didn\u2019t save anything new. Say \u201cScan my folders\u201d to Claude to see why.", { icon: "alert", duration: 9000 });
       else { state.focus = null; ui.toast("Looked through " + FM.fmtCount(s.totals.folders) + " folders: " + FM.fmtCount(s.totals.files) + " files, " + FM.fmtBytes(s.totals.bytes), { icon: "sparkle", duration: 6000 }); if (state.lens !== "files") setLens("files"); }
     }
+    if (kinds.indexOf("tidy") > -1) reportTidy();
     if (kinds.indexOf("reviewfolders") > -1) {
       const gained = fnow ? fnow.recommendations.length - (before.frecs || 0) : 0;
       ui.toast(gained > 0 ? "Claude left " + gained + (gained === 1 ? " suggestion" : " suggestions") + " about your folders" : "Claude has nothing new to suggest", { icon: "sparkle", duration: 6000 });
       if (gained > 0) { if (state.lens !== "files") setLens("files"); go("review"); }
     }
+  }
+
+  // ============================================================
+  // 5b. Fix buttons: show the plan, ask, save it, let Claude do it
+  // ============================================================
+  let pendingFix = null;
+  function openFix(plan) {
+    if (!plan) return;
+    pendingFix = plan;
+    const eg = plan.examples || [];
+    openGeneric('<div class="modal__head"><h2>' + esc(plan.title) + '</h2><button type="button" class="icon-btn" data-close aria-label="Close">' + icon("x") + "</button></div>" +
+      '<div class="modal__body stack"><p>' + esc(plan.summary) + "</p>" +
+      (eg.length ? '<ul class="gap__ideas">' + eg.map(function (e) { return "<li>" + esc(e) + "</li>"; }).join("") + (plan.count > eg.length ? '<li class="muted">and ' + FM.fmtCount(plan.count - eg.length) + " more</li>" : "") + "</ul>" : "") +
+      '<p class="tidy-safe">' + icon("lock") + "<span>" + esc(plan.reassure) + "</span></p></div>" +
+      '<div class="modal__foot"><button type="button" class="btn" data-close>Cancel</button><button type="button" class="btn btn--primary" data-action="fix-go">' + esc(plan.button) + "</button></div>");
+  }
+  function fixGo() {
+    const plan = pendingFix;
+    pendingFix = null;
+    generic.close();
+    if (!plan) return;
+    const action = TM.makeAction(plan);
+    tchange(function (d) { d.actions.push(action); }).then(function () {
+      claude.tidyIds.push(action.id);
+      startJob("tidy");
+    }).catch(function (err) { ui.toast(friendlyError(err).short, { icon: "alert", duration: 6000 }); });
+  }
+  function undoTidy(id) {
+    const a = tdata && tdata.actions.find(function (x) { return x.id === id; });
+    if (!a) return;
+    const u = TM.makeUndo(a.lens, id);
+    tchange(function (d) { d.actions.push(u); }).then(function () { claude.tidyIds.push(u.id); startJob("tidy"); }).catch(function (err) { ui.toast(friendlyError(err).short, { icon: "alert", duration: 6000 }); });
+  }
+  // Say how the tidy-up went, in plain words
+  function reportTidy() {
+    const ids = claude.tidyIds.splice(0);
+    ids.forEach(function (id) {
+      const a = tdata && tdata.actions.find(function (x) { return x.id === id; });
+      if (!a) return;
+      const n = a.summary ? a.summary.moved : 0, left = a.summary ? a.summary.left : 0;
+      if (a.kind === "undo") {
+        ui.toast(a.status === "done" ? "Put " + n + (n === 1 ? " thing" : " things") + " back where " + (n === 1 ? "it was" : "they were") : (a.note || "Couldn\u2019t undo that"), { icon: a.status === "done" ? "check" : "alert", duration: 7000 });
+      } else if (a.status === "done" || a.status === "partly") {
+        ui.toast("Tidied " + n + (n === 1 ? " thing" : " things") + (left ? ", left " + left + " alone (see Tidied so far)" : ""), { icon: "check", duration: 12000, actionLabel: "Undo", onAction: function () { undoTidy(a.id); } });
+      } else ui.toast(a.note || "Claude couldn\u2019t tidy that. Nothing was changed", { icon: "alert", duration: 9000 });
+    });
   }
 
   // ============================================================
@@ -541,6 +607,16 @@
       case "files-sort": { const k = btn.getAttribute("data-key"); state.fsort = { key: k, dir: state.fsort.key === k && state.fsort.dir === "asc" ? "desc" : (k === "name" || k === "folder" || k === "type" ? "asc" : "desc") }; renderView(); break; }
       case "show-finding": showFinding(btn.getAttribute("data-key")); break;
       case "finding-on-map": findingOnMap(btn.getAttribute("data-key")); break;
+      case "fix": {
+        const lens = btn.getAttribute("data-lens"), key = btn.getAttribute("data-key"), rid = btn.getAttribute("data-id");
+        if (!tdata) { ui.toast("The tidy-up list couldn\u2019t be found. Say \u201cTidy up\u201d to Claude in Claude Code", { icon: "alert", duration: 7000 }); break; }
+        if (TM.waiting(tdata) || claude.jobs.indexOf("tidy") > -1) { ui.toast("Claude is already tidying. Give it a moment", { icon: "sparkle" }); break; }
+        if (lens === "files") openFix(key === "rec" ? TM.filesRecPlan(fdata, fdata.recommendations.find(function (r) { return r.id === rid; })) : TM.filesPlan(fdata, key));
+        else openFix(key === "recommendation" ? TM.skillsPlan(data, key, (data.recommendations.find(function (r) { return r.id === rid; }) || {}).nodeIds) : TM.skillsPlan(data, key));
+        break;
+      }
+      case "fix-go": fixGo(); break;
+      case "undo-tidy": undoTidy(id); break;
       case "frec-done": fchange(function (d) { FM.mut.decideRec(d, id, "done"); }).then(function () { ui.toast("Marked done", { actionLabel: "Undo", onAction: function () { fchange(function (d) { FM.mut.decideRec(d, id, "open"); }); } }); }); break;
       case "frec-skip": fchange(function (d) { FM.mut.decideRec(d, id, "skipped"); }).then(function () { ui.toast("Not now", { actionLabel: "Undo", onAction: function () { fchange(function (d) { FM.mut.decideRec(d, id, "open"); }); } }); }); break;
       case "settings": go("preferences"); break;
@@ -736,9 +812,10 @@
 
   renderGate();
   store.start().then(function () {
+    tstore.start().catch(function () { /* no tidy-up list yet: the Fix buttons stay out of sight */ });
     fstore.start().catch(function () { /* no folder map file yet: the Files side shows its welcome card */ });
     loadToolkit();
-    if (store.isHelper()) fetch("/api/claude/status", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (st) { if ((st.running || st.queued) && /^skill-map:/.test(st.job || "")) { claude.jobs.push(/scan-my-folders/.test(st.job) ? "scanfolders" : /review-my-folders/.test(st.job) ? "reviewfolders" : /scan/.test(st.job) ? "scan" : /group/.test(st.job) ? "group" : "review"); watchClaude(); } }).catch(function () {});
+    if (store.isHelper()) fetch("/api/claude/status", { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (st) { if ((st.running || st.queued) && /^skill-map:/.test(st.job || "")) { claude.jobs.push(/tidy-up/.test(st.job) ? "tidy" : /scan-my-folders/.test(st.job) ? "scanfolders" : /review-my-folders/.test(st.job) ? "reviewfolders" : /scan/.test(st.job) ? "scan" : /group/.test(st.job) ? "group" : "review"); watchClaude(); } }).catch(function () {});
     if (/^https?:$/.test(location.protocol)) fetch("/api/info", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (info) { C.setFolder(info.folder); }).catch(function () {});
   });
 })();

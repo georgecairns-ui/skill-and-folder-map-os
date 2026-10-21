@@ -7,14 +7,16 @@
   "app": "apps/skill-map/",
   "dataFiles": [
     "apps/skill-map/data/skillmap.json",
-    "apps/skill-map/data/filemap.json"
+    "apps/skill-map/data/filemap.json",
+    "apps/skill-map/data/tidy.json"
   ],
   "skills": [
     "scan-my-skills",
     "group-my-skills",
     "review-my-skills",
     "scan-my-folders",
-    "review-my-folders"
+    "review-my-folders",
+    "tidy-up"
   ],
   "setupSteps": [
     "setup/skill-map-01-first-scan.md",

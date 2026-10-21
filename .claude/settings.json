@@ -24,6 +24,12 @@
       "Bash(python3 apps/skill-map/scan/scan-files.py)",
       "Bash(python3 apps/skill-map/scan/scan-files.py --dry-run)",
       "Bash(python apps/skill-map/scan/scan-files.py)",
+      "Bash(node apps/skill-map/tidy/tidy.js)",
+      "Bash(node apps/skill-map/tidy/tidy.js --dry-run)",
+      "Bash(python3 apps/skill-map/tidy/tidy.py)",
+      "Bash(python3 apps/skill-map/tidy/tidy.py --dry-run)",
+      "Bash(python apps/skill-map/tidy/tidy.py)",
+      "Bash(ls:*)",
       "Bash(bash setup/scripts/start-task-list.sh)",
       "Bash(powershell -ExecutionPolicy Bypass -File setup\\scripts\\start-task-list.ps1)"
     ]
