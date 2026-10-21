@@ -5,6 +5,9 @@ TASK LIST OS: the little helper that runs your task list on this computer (Pytho
 The same as server.js, for computers that have Python 3 but not Node. Claude uses whichever
 is available. It serves the task list app at http://localhost:4747 and lets it read and save
 apps/task-list/data/tasks.json, plus the data files of any attached tools listed in apps/installed.json.
+For a tool marked "media": true there, it also keeps the photos and videos added to that tool's posts in
+the tool's own data/media folder (only a safe file name, the right kind of file, up to 200 MB, never over a
+file that is already there, no delete) and plays them back.
 
 Safety: only listens on this computer (127.0.0.1), only serves the apps folder, only ever saves
 the task file and attached tools' listed data files, keeps a backup (for example tasks.backup.json)
@@ -39,6 +42,13 @@ BRAIN_DUMP = os.path.join(APPS, "home", "data", "braindump.json")  # the shared 
 DATA_FILE_RE = re.compile(r"^apps/[a-z0-9-]+/data/[a-z0-9-]+\.json$")
 DATA_URL_RE = re.compile(r"^/api/data/([a-z0-9-]+)/([a-z0-9-]+\.json)(/meta)?$")
 MAX_BODY = 10 * 1024 * 1024
+# Photos and videos: apps/<tool>/data/media/<name>, for a tool marked "media": true in apps/installed.json
+MEDIA_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,60}\.(jpg|jpeg|png|webp|gif|mp4|mov|webm)$")
+MEDIA_URL_RE = re.compile(r"^/api/media/([a-z0-9-]+)/([^/]+)$")
+MEDIA_TYPES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif",
+               ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm"}
+MAX_MEDIA = 200 * 1024 * 1024
+MEDIA_CHUNK = 64 * 1024
 # Asking Claude to do a small job: sort a voice note, update a deal (see server.js for the plain-English explanation)
 AUTO_CLAUDE = os.environ.get("TLOS_AUTO_CLAUDE", "on") != "off"
 _logs = os.path.join(os.path.expanduser("~"), "Library", "Logs")
@@ -178,6 +188,15 @@ def data_file_for(tool_id, file_name):
     return None
 
 
+def media_dir_for(tool_id):
+    """The folder a tool keeps photos and videos in, or None if that tool isn't installed or isn't marked "media": true."""
+    tool = next((t for t in installed_tools() if isinstance(t, dict) and t.get("id") == tool_id), None)
+    app = tool.get("app") if tool and isinstance(tool.get("app"), str) else ""
+    if not tool or tool.get("media") is not True or not re.match(r"^apps/[a-z0-9-]+/$", app) or app in ("apps/shared/", "apps/server/"):
+        return None
+    return os.path.join(ROOT, *app.split("/"), "data", "media")
+
+
 def home_page():
     """The page http://localhost:4747 opens: Home, or (in an older copy without it) the first tool in apps/installed.json."""
     if os.path.exists(os.path.join(APPS, "home", "index.html")):
@@ -236,6 +255,99 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(404, {"error": "missing"})
         return self.send(200, text, TYPES[".json"], {"X-Modified": str(modified(path))})
 
+    def get_media(self, directory, name):
+        """Plays a saved photo or video back. Supports Range requests, which browsers use to play and skip around a video."""
+        path = os.path.join(directory, name)
+        size = os.path.getsize(path) if os.path.isfile(path) else 0
+        if not size:
+            return self.send_json(404, {"error": "missing"})
+        start, end, status = 0, size - 1, 200
+        wanted = re.match(r"^bytes=(\d*)-(\d*)$", self.headers.get("Range", ""))
+        if wanted and (wanted.group(1) or wanted.group(2)):
+            start = int(wanted.group(1)) if wanted.group(1) else max(0, size - int(wanted.group(2)))
+            if wanted.group(1) and wanted.group(2):
+                end = min(end, int(wanted.group(2)))
+            if start > end:
+                return self.send(416, "Range not satisfiable", extra={"Content-Range": "bytes */%d" % size})
+            status = 206
+        self.send_response(status)
+        self.send_header("Content-Type", MEDIA_TYPES[os.path.splitext(name)[1]])
+        self.send_header("Cache-Control", "private, max-age=3600")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Accept-Ranges", "bytes")
+        if status == 206:
+            self.send_header("Content-Range", "bytes %d-%d/%d" % (start, end, size))
+        self.send_header("Content-Length", str(end - start + 1))
+        self.end_headers()
+        if self.command == "HEAD":
+            return
+        try:
+            with open(path, "rb") as f:
+                f.seek(start)
+                left = end - start + 1
+                while left > 0:
+                    chunk = f.read(min(MEDIA_CHUNK, left))
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+                    left -= len(chunk)
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # the browser stopped early, which is normal for video
+
+    def put_media(self, directory, name):
+        """Saves an upload: checks it, writes a temporary file, then swaps it in. Never replaces a file that is there."""
+        if self.headers.get("Content-Type", "").split(";")[0].strip().lower() != MEDIA_TYPES[os.path.splitext(name)[1]]:
+            return self.send_json(415, {"error": "wrong kind of file"})
+        try:
+            length = int(self.headers.get("Content-Length", ""))
+        except ValueError:
+            length = 0
+        if length < 1:
+            return self.send_json(411, {"error": "length needed"})
+        if length > MAX_MEDIA:
+            return self.send_json(413, {"error": "too large"})
+        path = os.path.join(directory, name)
+        tmp = path + ".saving"
+        if os.path.exists(path):
+            self.skip_body(length)  # so the browser gets this answer instead of a dropped connection
+            return self.send_json(409, {"error": "already there"})
+        try:
+            os.makedirs(directory, exist_ok=True)
+            with open(tmp, "xb") as out:
+                left = length
+                while left > 0:
+                    chunk = self.rfile.read(min(MEDIA_CHUNK, left))
+                    if not chunk:
+                        break
+                    out.write(chunk)
+                    left -= len(chunk)
+            if left:
+                return self.drop_upload(tmp, 400, "incomplete")
+            if os.path.exists(path):
+                return self.drop_upload(tmp, 409, "already there")
+            os.replace(tmp, path)
+        except FileExistsError:
+            return self.send_json(409, {"error": "already there"})
+        except OSError:
+            return self.drop_upload(tmp, 500, "save failed")
+        self.send_json(201, {"file": name})
+
+    def skip_body(self, length):
+        """Reads and throws away what the browser is still sending."""
+        while length > 0:
+            chunk = self.rfile.read(min(MEDIA_CHUNK, length))
+            if not chunk:
+                break
+            length -= len(chunk)
+
+    def drop_upload(self, tmp, status, error):
+        """Throws away a half-saved upload and says why."""
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        self.send_json(status, {"error": error})
+
     def do_GET(self):
         if not self.host_ok():
             return self.send(403, "Not allowed")
@@ -256,6 +368,14 @@ class Handler(BaseHTTPRequestHandler):
             if m.group(3):
                 return self.send_json(200, {"modified": modified(path)})
             return self.read_file(path)
+        media = MEDIA_URL_RE.match(url)
+        if media:
+            directory = media_dir_for(media.group(1))
+            if not directory:
+                return self.send_json(404, {"error": "not a tool that keeps photos and videos"})
+            if not MEDIA_NAME_RE.match(media.group(2)):
+                return self.send_json(400, {"error": "file name not allowed"})
+            return self.get_media(directory, media.group(2))
         if url == "/api/claude/status":
             with claude_lock:
                 snapshot = dict(claude_run)
@@ -309,6 +429,14 @@ class Handler(BaseHTTPRequestHandler):
         if not self.host_ok() or not self.origin_ok():
             return self.send_json(403, {"error": "forbidden"})
         url = self.path.split("?")[0]
+        media = MEDIA_URL_RE.match(url)
+        if media:
+            directory = media_dir_for(media.group(1))
+            if not directory:
+                return self.send_json(404, {"error": "not a tool that keeps photos and videos"})
+            if not MEDIA_NAME_RE.match(media.group(2)):
+                return self.send_json(400, {"error": "file name not allowed"})
+            return self.put_media(directory, media.group(2))
         if url == "/api/tasks":
             path = DATA
         else:
