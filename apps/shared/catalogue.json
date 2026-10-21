@@ -27,11 +27,11 @@
     },
     {
       "id": "proposals",
-      "name": "Proposal Writer OS",
-      "description": "Paste your notes from a call and get a proposal in your brand. Claude writes it in your words and your prices, and you check it before it goes anywhere.",
+      "name": "Proposal OS",
+      "description": "Put everything about a client in one folder and get a proposal in your brand. Claude writes it with your packages and prices, and you check it before it goes anywhere.",
       "icon": "fileText",
       "app": "apps/proposals/",
-      "repository": "proposal-writer-os"
+      "repository": "proposal-writing-os"
     },
     {
       "id": "content",
