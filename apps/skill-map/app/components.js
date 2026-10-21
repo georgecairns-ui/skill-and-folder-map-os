@@ -89,6 +89,18 @@
     });
   }
 
+  // What Claude has tidied so far, each with an Undo button while it can still be undone
+  const WORDS = { done: "Done", partly: "Partly done", failed: "Nothing changed", undone: "Undone", "partly-undone": "Partly undone", queued: "Waiting for Claude" };
+  function tidiedSoFar(rows) {
+    if (!rows || !rows.length) return "";
+    const F = window.SM.fmodel;
+    return '<details class="panel done-list tidied"' + (rows.some(function (r) { return r.status === "queued"; }) ? " open" : "") + '><summary>Tidied so far <span class="badge">' + rows.length + '</span></summary><ul class="hlist hlist--plain" role="list">' +
+      rows.slice(0, 20).map(function (r) {
+        return '<li class="tidied__row"><span class="tidied__main"><strong>' + esc(r.title) + '</strong><span class="muted"> ' + esc(WORDS[r.status] || r.status) + (r.moved ? " · " + F.fmtCount(r.moved) + (r.moved === 1 ? " thing" : " things") : "") + (r.at ? " · " + esc(F.whenLabel(String(r.at).slice(0, 10))) : "") + (r.note ? " · " + esc(r.note) : "") + "</span></span>" +
+          (r.undoable ? '<button type="button" class="btn btn--sm" data-action="undo-tidy" data-id="' + esc(r.id) + '">' + icon("undo") + "Undo</button>" : "") + "</li>";
+      }).join("") + "</ul></details>";
+  }
+
   // Shown before the first scan
   function scanCard(c) {
     return '<section class="panel setup-card"><div class="setup-card__art"><img src="' + ART.welcome + '" alt="" width="72" height="72"></div>' +
@@ -101,6 +113,6 @@
   window.SM = window.SM || {};
   window.SM.c = {
     ART: ART, setFolder: setFolder, claudeLink: claudeLink, say: say, sectionHead: sectionHead, empty: empty,
-    originChip: originChip, flagChips: flagChips, usesText: usesText, bars: bars, stat: stat, countUp: countUp, scanCard: scanCard
+    originChip: originChip, flagChips: flagChips, usesText: usesText, bars: bars, stat: stat, countUp: countUp, scanCard: scanCard, tidiedSoFar: tidiedSoFar
   };
 })();

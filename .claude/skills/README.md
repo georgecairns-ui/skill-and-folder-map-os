@@ -20,6 +20,7 @@ In Claude Code, every skill is also a command: type `/` and its name, for exampl
 |---|---|---|
 | `scan-my-folders` | "Scan my folders", or press **Scan** in the Files map | Claude looks through the folders you've chosen and saves a map of what's in them, names, sizes and dates only. Read-only |
 | `review-my-folders` | "Review my folders", or press **Review** in the Files map | Claude suggests what's worth tidying: duplicate files, big old files, old downloads, untidy names, and crowded or empty folders |
+| `tidy-up` | Press a **Fix** button on the Clean-up or Review page, or say "Tidy up what I asked for" | Claude does the tidying you agreed to: moves old or duplicate files into a "Tidied by Claude" folder, gives untidy files clearer names, sorts crowded folders, retires unused skills into an archive folder. Never deletes, and every tidy-up can be undone |
 
 ## Keeping things organised
 
@@ -43,8 +44,9 @@ In Claude Code, every skill is also a command: type `/` and its name, for exampl
 
 ## The rules every skill follows
 
-- Skill and Folder Map OS only reads. It never changes, moves, deletes or sends anything on its own; your skills and files never leave your computer.
-- Claude only ever suggests a tidy-up. You mark each one Done or Not now.
+- Scanning and reviewing stay read-only: `scan-my-skills`, `scan-my-folders`, `group-my-skills`, `review-my-skills` and `review-my-folders` never change, move, delete or send anything.
+- Claude changes something only when you press a Fix button and confirm. Then `tidy-up` moves or renames, never deletes, and every tidy-up can be undone.
+- Your skills and files never leave your computer.
 - Everything stays in this folder or in the apps you've connected.
 
 ## Adding your own

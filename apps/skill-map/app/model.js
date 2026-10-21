@@ -14,7 +14,7 @@
     nodes             every skill and command: where it lives, what it says it does, how often it was used
     edges             links between skills: "ref" (one names another) and "dup" (same name twice)
     tags              the person's own labels
-    recommendations   what Claude suggests doing about a skill (it only suggests)
+    recommendations   what Claude suggests doing about a skill (it suggests; a Fix button acts)
 
   Every number on screen (how many skills, how many unused, use per month) is worked out here from
   the raw scan, never typed in by Claude.

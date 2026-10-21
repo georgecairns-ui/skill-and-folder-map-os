@@ -40,7 +40,9 @@ No, and it can't see it either. A skill used only in Cowork or on claude.ai does
 
 ## Does Skill and Folder Map OS change any of my skills, files or folders?
 
-No. It only reads. Claude never edits, renames, moves or deletes a skill, a file or a folder, anywhere, for any reason. When Claude thinks something should change (two skills sharing a name, one worth retiring, a description worth tidying, a set of duplicate files, an old file worth archiving), it adds a suggestion to the Review page. You decide; nothing happens to a skill, a file or a folder unless you go and do it yourself.
+Not on its own. Scanning and reviewing only read: Claude looks at names, sizes and dates and never opens a file. When Claude thinks something should change (two skills sharing a name, one worth retiring, a set of duplicate files, an old file worth archiving), it adds a suggestion and a Fix button. Nothing changes until you press the button and confirm in the box that tells you exactly what will happen.
+
+When you do press one, Claude only moves or renames: it never deletes anything. Files go into a folder called "Tidied by Claude" inside the same folder you chose, and retired skills go into an archive folder next to their own. It never overwrites anything, never touches a skill that came from a plugin or from this toolkit, and never leaves the folders you chose. Every tidy-up is listed under **Tidied so far** with an Undo button.
 
 ## Does it send anything anywhere?
 
@@ -48,7 +50,7 @@ No. Both scans run entirely on your computer and write to files also on your com
 
 ## What about passwords and keys?
 
-Skill and Folder Map OS doesn't need a sign-in to anything: it only reads files already on your computer. It never asks for a password or a key, and none should ever go into this folder or into the chat.
+Skill and Folder Map OS doesn't need a sign-in to anything: it only works with files already on your computer. It never asks for a password or a key, and none should ever go into this folder or into the chat.
 
 ## What is the helper?
 

@@ -3,13 +3,13 @@
   -----------------------------------------------------------------------
   The map page for folders lives in view-map.js (it shares the map engine with the skills). These are the
   other pages the Files side of the app shows. They read the folder scan through c.f, and work out every
-  number from it. Claude only suggests; nothing here moves, renames or deletes a file.
+  number from it. Scanning only reads; a file is moved or renamed only when the person presses a Fix button, and nothing is ever deleted.
 */
 (function () {
   "use strict";
 
   const ui = window.TaskListOS.ui, esc = ui.esc, icon = ui.icon;
-  const FM = window.SM.fmodel, C = window.SM.c;
+  const FM = window.SM.fmodel, C = window.SM.c, T = window.SM.tidy;
   const F = (window.SM.fview = window.SM.fview || {});
 
   // Shown before the first folder scan
@@ -18,7 +18,7 @@
     return '<section class="panel setup-card"><div class="setup-card__art"><img src="' + C.ART.thinking + '" alt="" width="72" height="72"></div>' +
       '<div class="setup-card__body"><h2>Let’s map your folders</h2>' +
       '<p class="muted">Claude looks through the folders you choose and draws them as a map you can click into, down to each file. Then it shows what needs tidying: duplicates, very big files, old downloads, untidy names and empty folders.</p>' +
-      '<p class="muted"><strong>It reads names, sizes and dates only.</strong> It never opens a file, and it never moves, renames or deletes anything. It starts with ' + roots.map(function (r) { return "<code>" + esc(r) + "</code>"; }).join(", ") + '. You change the list in <button type="button" class="link-btn" data-action="settings">Preferences</button>.</p>' +
+      '<p class="muted"><strong>It reads names, sizes and dates only.</strong> It never opens a file, and nothing is ever deleted. Tidying happens only when you press a Fix button. It starts with ' + roots.map(function (r) { return "<code>" + esc(r) + "</code>"; }).join(", ") + '. You change the list in <button type="button" class="link-btn" data-action="settings">Preferences</button>.</p>' +
       '<div class="setup-card__actions">' + (c.canScan ? '<button type="button" class="btn btn--primary btn--lg" data-action="scan-folders">' + icon("refresh") + "Scan my folders now</button>" : "") + "</div>" +
       '<p class="muted setup-card__alt">' + (c.canScan ? "Or in Claude Code, in your Skill and Folder Map OS folder, say " : "In Claude Code, in your Skill and Folder Map OS folder, say ") + C.say("Scan my folders") + "</p></div></section>";
   }
@@ -165,7 +165,7 @@
     const notes = (s.warnings || []).map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("");
     return C.sectionHead("The last scan", { icon: "refresh", right: '<button type="button" class="btn btn--sm" data-action="scan-folders">' + icon("refresh") + "Scan again</button>" }) +
       '<p class="muted">' + esc(FM.scanLabel(d)) + "." + esc(diff) + "</p>" + '<ul class="sources" role="list">' + rows + "</ul>" +
-      '<p class="muted drawer__small">Only names, sizes and dates are read. Nothing is opened, and nothing is changed.</p>' + (notes ? '<div class="notes"><strong>Notes from the scan</strong><ul>' + notes + "</ul></div>" : "");
+      '<p class="muted drawer__small">Only names, sizes and dates are read. Nothing is opened, and nothing is deleted. Scanning changes nothing.</p>' + (notes ? '<div class="notes"><strong>Notes from the scan</strong><ul>' + notes + "</ul></div>" : "");
   }
   const overview = {
     title: function () { return "Overview"; },
@@ -214,10 +214,10 @@
           return '<section class="gap"><div class="gap__head"><h3>' + esc(k.title) + '</h3><span class="chip chip--' + k.tone + ' num">' + FM.fmtCount(k.count) + "</span></div>" +
             '<p class="gap__blurb">' + esc(k.why) + "</p>" + (k.bytes ? '<p class="gap__size num">' + esc(FM.fmtBytes(k.bytes)) + (k.key === "dups" ? " repeated" : " in these files") + "</p>" : "") +
             (ex.length ? '<ul class="gap__ideas">' + ex.map(function (e) { return "<li>" + esc(e) + "</li>"; }).join("") + "</ul>" : "") +
-            '<div class="gap__actions"><button type="button" class="btn btn--sm" data-action="show-finding" data-key="' + k.key + '">' + icon("list") + "See them</button>" +
+            '<div class="gap__actions">' + (T.filesPlan(d, k.key) ? '<button type="button" class="btn btn--sm btn--primary" data-action="fix" data-lens="files" data-key="' + k.key + '">' + icon("sparkle") + esc(T.filesPlan(d, k.key).button) + "</button>" : "") + '<button type="button" class="btn btn--sm" data-action="show-finding" data-key="' + k.key + '">' + icon("list") + "See them</button>" +
             (k.ids.length ? '<button type="button" class="btn btn--sm" data-action="finding-on-map" data-key="' + k.key + '">' + icon("map") + "Find on the map</button>" : "") + "</div></section>";
         }).join("") + "</div>" +
-        '<section class="panel panel--accent gaps-cta"><div><h2>Want a hand tidying up?</h2><p class="muted">Get AI Powers shows your team how to keep folders and files in order, and sets Claude up to help.</p></div>' +
+        C.tidiedSoFar(T.history(c.t, "files")) + '<section class="panel panel--accent gaps-cta"><div><h2>Want a hand tidying up?</h2><p class="muted">Get AI Powers shows your team how to keep folders and files in order, and sets Claude up to help.</p></div>' +
         '<a class="btn btn--primary" href="https://getaipowers.com" target="_blank" rel="noopener">' + icon("external") + "getaipowers.com</a></section></div>";
     }
   };
@@ -234,7 +234,7 @@
     const prompt = "Skill and Folder Map OS suggested this about my folders: " + r.title + ". " + (r.why || "") + " Please talk me through it. Don't move, rename or delete anything until I say so.";
     return '<article class="rec enter" data-rec="' + esc(r.id) + '"><div class="rec__icon">' + icon(k.icon) + '</div><div class="rec__body"><div class="rec__top"><span class="chip chip--quiet">' + esc(k.label) + "</span></div><h3>" + esc(r.title) + "</h3>" + (r.why ? '<p class="muted">' + esc(r.why) + "</p>" : "") +
       ((files.length || folders.length) ? '<div class="gap__chips">' + folders.slice(0, 5).map(function (f) { return '<button type="button" class="skill-chip" data-action="open-folder" data-id="' + esc(f.id) + '">' + esc(f.name) + "</button>"; }).join("") + files.slice(0, 6).map(function (x) { return '<button type="button" class="skill-chip is-used" data-action="open-file" data-id="' + esc(x.id) + '">' + esc(x.name) + "</button>"; }).join("") + "</div>" : "") +
-      '<div class="rec__actions"><button type="button" class="btn btn--sm btn--approve" data-action="frec-done" data-id="' + esc(r.id) + '">' + icon("check") + 'Done</button><button type="button" class="btn btn--sm" data-action="frec-skip" data-id="' + esc(r.id) + '">Not now</button>' +
+      '<div class="rec__actions">' + (T.filesRecPlan(d, r) ? '<button type="button" class="btn btn--sm btn--primary" data-action="fix" data-lens="files" data-key="rec" data-id="' + esc(r.id) + '">' + icon("sparkle") + esc(T.filesRecPlan(d, r).button) + "</button>" : "") + '<button type="button" class="btn btn--sm btn--approve" data-action="frec-done" data-id="' + esc(r.id) + '">' + icon("check") + 'Done</button><button type="button" class="btn btn--sm" data-action="frec-skip" data-id="' + esc(r.id) + '">Not now</button>' +
       '<a class="btn btn--sm btn--ghost" href="' + esc(C.claudeLink(prompt)) + '" title="Opens Claude with this typed in. Nothing is sent until you press send.">' + icon("sparkle") + "Talk it through with Claude</a></div></div></article>";
   }
   function dupSets(d) {
@@ -253,13 +253,13 @@
       if (FM.notSetUp(d)) return '<div class="page page--narrow">' + foldersCard(c) + "</div>";
       const recs = FM.openRecs(d), done = FM.doneRecs(d);
       const sets = d.findings.dups.groupCount;
-      return '<div class="page page--narrow"><div class="page-intro"><p>Claude looks over your folders and suggests what to tidy. It only suggests: it never moves, renames or deletes a file. You do that yourself, or ask Claude to talk you through it.</p>' +
+      return '<div class="page page--narrow"><div class="page-intro"><p>Claude looks over your folders and suggests what to tidy. Where it can, there is a button to have Claude do it for you: nothing is ever deleted, files only move into a “Tidied by Claude” folder, and you can undo it.</p>' +
         '<button type="button" class="btn btn--primary" data-action="review-folders">' + icon("sparkle") + "Review my folders</button></div>" +
         '<section class="panel panel--flush">' + C.sectionHead("From Claude", { icon: "sparkle", count: recs.length, accent: recs.length > 0 }) +
         (recs.length ? '<div class="recs">' + recs.map(function (r) { return recCard(c, r); }).join("") + "</div>" : C.empty("thinking", "Nothing from Claude yet", "Press Review my folders and Claude looks through what was found, then suggests what to tidy first.", "", true)) + "</section>" +
         '<section class="panel panel--flush">' + C.sectionHead("Duplicate files", { icon: "alert", count: sets }) +
         (sets ? '<div class="spotted">' + dupSets(d) + "</div>" : '<p class="muted list-empty drawer__pad">No file shares its name and size with another.</p>') + "</section>" +
-        (done.length ? '<details class="panel done-list"><summary>Done <span class="badge">' + done.length + '</span></summary><ul class="hlist hlist--plain" role="list">' + done.map(function (r) { return '<li class="muted">' + icon("check") + " " + esc(r.title) + "</li>"; }).join("") + "</ul></details>" : "") + "</div>";
+        (done.length ? '<details class="panel done-list"><summary>Done <span class="badge">' + done.length + '</span></summary><ul class="hlist hlist--plain" role="list">' + done.map(function (r) { return '<li class="muted">' + icon("check") + " " + esc(r.title) + "</li>"; }).join("") + "</ul></details>" : "") + C.tidiedSoFar(T.history(c.t, "files")) + "</div>";
     }
   };
 

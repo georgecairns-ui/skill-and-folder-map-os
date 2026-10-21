@@ -27,7 +27,7 @@ fail() { echo "RELEASE STOPPED: $1" >&2; exit 1; }
 
 # ---------- 1. Is everything that ships still a blank template? ----------
 python3 - "$ROOT" <<'PYEOF' || fail "the files above contain real data. Restore them with: git checkout -- apps/skill-map/data context setup/progress.md CLAUDE.md
-  (apps/skill-map/data covers both skillmap.json and filemap.json)"
+  (apps/skill-map/data covers skillmap.json, filemap.json and tidy.json)"
 import json, sys, pathlib, re
 root = pathlib.Path(sys.argv[1])
 problems = []
@@ -69,6 +69,9 @@ if fsettings.get("roots"):
     problems.append("apps/skill-map/data/filemap.json has folders listed in settings.roots")
 if fsettings.get("setUp"):
     problems.append("apps/skill-map/data/filemap.json says setup is done")
+tdata = json.loads((root / "apps/skill-map/data/tidy.json").read_text())
+if tdata.get("actions"):
+    problems.append("apps/skill-map/data/tidy.json has tidy-up actions in it")
 # No demo mode and no sample files ship
 for f in list((root / "apps").rglob("*.js")) + list((root / "apps").rglob("*.html")) + list((root / "apps").rglob("menu.json")):
     txt = f.read_text(errors="ignore")
@@ -104,10 +107,10 @@ rsync -a \
 find "$OUT" -mindepth 2 -type d -name .claude -empty -prune -exec rm -rf {} +
 
 # ---------- 3. Checks ----------
-for f in "START-HERE.md" "CLAUDE.md" "Open Skill and Folder Map.html" "apps/skill-map/index.html" "apps/skill-map/data/skillmap.json" "apps/skill-map/data/filemap.json" "apps/skill-map/menu.json" "apps/skill-map/home-boxes.js" "apps/skill-map/claude-jobs.json" "apps/skill-map/areas-default.json" "apps/skill-map/scan/scan.js" "apps/skill-map/scan/scan.py" "apps/skill-map/scan/scan-files.js" "apps/skill-map/scan/scan-files.py" "apps/skill-map/app/app.js" "apps/skill-map/app/map.js" "apps/skill-map/app/model.js" "apps/skill-map/app/files-model.js" "apps/skill-map/app/view-files.js" "apps/skill-map/app/drawer-files.js" "setup/progress.md" "setup/skill-map-01-first-scan.md" "setup/skill-map-02-group-by-business.md" "setup/skill-map-03-map-your-folders.md" ".claude/skills/README.md" ".claude/settings.json" ".claude/skills/scan-my-skills/SKILL.md" ".claude/skills/group-my-skills/SKILL.md" ".claude/skills/review-my-skills/SKILL.md" ".claude/skills/scan-my-folders/SKILL.md" ".claude/skills/review-my-folders/SKILL.md" "setup/scripts/save-key.sh" "setup/scripts/start-task-list.sh" "apps/server/server.js" "apps/server/server.py" "setup/connections/README.md" "toolkit.json" "ATTACHING.md" "apps/installed.json" "apps/shared/catalogue.json" "apps/shared/VERSION" "apps/shared/sidebar.css" "apps/shared/js/sidebar.js" "apps/shared/js/theme.js" "apps/shared/js/braindump.js" ".claude/skills/sort-brain-dump/SKILL.md" "apps/shared/images/claude-icon.png" "apps/home/index.html" "apps/home/home.js" "apps/home/home.css" "apps/shared/fonts/Figtree-Variable.woff2" "setup/09-check-and-hand-over.md"; do
+for f in "START-HERE.md" "CLAUDE.md" "Open Skill and Folder Map.html" "apps/skill-map/index.html" "apps/skill-map/data/skillmap.json" "apps/skill-map/data/filemap.json" "apps/skill-map/menu.json" "apps/skill-map/home-boxes.js" "apps/skill-map/claude-jobs.json" "apps/skill-map/areas-default.json" "apps/skill-map/scan/scan.js" "apps/skill-map/scan/scan.py" "apps/skill-map/tidy/tidy.js" "apps/skill-map/tidy/tidy.py" "apps/skill-map/data/tidy.json" ".claude/skills/tidy-up/SKILL.md" "apps/skill-map/app/tidy-model.js" "apps/skill-map/scan/scan-files.js" "apps/skill-map/scan/scan-files.py" "apps/skill-map/app/app.js" "apps/skill-map/app/map.js" "apps/skill-map/app/model.js" "apps/skill-map/app/files-model.js" "apps/skill-map/app/view-files.js" "apps/skill-map/app/drawer-files.js" "setup/progress.md" "setup/skill-map-01-first-scan.md" "setup/skill-map-02-group-by-business.md" "setup/skill-map-03-map-your-folders.md" ".claude/skills/README.md" ".claude/settings.json" ".claude/skills/scan-my-skills/SKILL.md" ".claude/skills/group-my-skills/SKILL.md" ".claude/skills/review-my-skills/SKILL.md" ".claude/skills/scan-my-folders/SKILL.md" ".claude/skills/review-my-folders/SKILL.md" "setup/scripts/save-key.sh" "setup/scripts/start-task-list.sh" "apps/server/server.js" "apps/server/server.py" "setup/connections/README.md" "toolkit.json" "ATTACHING.md" "apps/installed.json" "apps/shared/catalogue.json" "apps/shared/VERSION" "apps/shared/sidebar.css" "apps/shared/js/sidebar.js" "apps/shared/js/theme.js" "apps/shared/js/braindump.js" ".claude/skills/sort-brain-dump/SKILL.md" "apps/shared/images/claude-icon.png" "apps/home/index.html" "apps/home/home.js" "apps/home/home.css" "apps/shared/fonts/Figtree-Variable.woff2" "setup/09-check-and-hand-over.md"; do
   [ -e "$OUT/$f" ] || fail "missing $f"
 done
-for f in apps/skill-map/data/skillmap.json apps/skill-map/data/filemap.json apps/skill-map/menu.json apps/skill-map/claude-jobs.json apps/skill-map/areas-default.json toolkit.json apps/installed.json apps/shared/catalogue.json; do
+for f in apps/skill-map/data/skillmap.json apps/skill-map/data/filemap.json apps/skill-map/data/tidy.json apps/skill-map/menu.json apps/skill-map/claude-jobs.json apps/skill-map/areas-default.json toolkit.json apps/installed.json apps/shared/catalogue.json; do
   python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$OUT/$f" || fail "$f is not valid"
 done
 # A fresh download lists only Skill and Folder Map OS, and no test tool ever ships
@@ -118,7 +121,7 @@ python3 -c 'import json,sys; t=json.load(open(sys.argv[1])); sys.exit(0 if t.get
 for f in apps/installed.json toolkit.json; do
   python3 -c '
 import json, sys
-want = {"apps/skill-map/data/skillmap.json", "apps/skill-map/data/filemap.json"}
+want = {"apps/skill-map/data/skillmap.json", "apps/skill-map/data/filemap.json", "apps/skill-map/data/tidy.json"}
 d = json.load(open(sys.argv[1]))
 entries = d["tools"] if "tools" in d else [d]
 for t in entries:
@@ -126,15 +129,17 @@ for t in entries:
         got = set(t.get("dataFiles") or [])
         sys.exit(0 if want <= got else 1)
 sys.exit(1)
-' "$OUT/$f" || fail "$f must list both apps/skill-map/data/skillmap.json and apps/skill-map/data/filemap.json"
+' "$OUT/$f" || fail "$f must list all 3 data files: skillmap.json, filemap.json and tidy.json"
 done
 
 # Syntax-check both scan pairs, without leaving a __pycache__ behind in the kit
 PYCHECK="$(mktemp -d "${TMPDIR:-/tmp}/skill-map-pycheck.XXXXXX")"
 node --check "$OUT/apps/skill-map/scan/scan.js" || fail "apps/skill-map/scan/scan.js has a syntax error"
+node --check "$OUT/apps/skill-map/tidy/tidy.js" || fail "apps/skill-map/tidy/tidy.js has a syntax error"
 node --check "$OUT/apps/skill-map/scan/scan-files.js" || fail "apps/skill-map/scan/scan-files.js has a syntax error"
 PYTHONPYCACHEPREFIX="$PYCHECK" python3 -m py_compile "$OUT/apps/skill-map/scan/scan.py" || fail "apps/skill-map/scan/scan.py has a syntax error"
 PYTHONPYCACHEPREFIX="$PYCHECK" python3 -m py_compile "$OUT/apps/skill-map/scan/scan-files.py" || fail "apps/skill-map/scan/scan-files.py has a syntax error"
+PYTHONPYCACHEPREFIX="$PYCHECK" python3 -m py_compile "$OUT/apps/skill-map/tidy/tidy.py" || fail "apps/skill-map/tidy/tidy.py has a syntax error"
 rm -rf "$PYCHECK"
 if find "$OUT" -name '__pycache__' | grep -q .; then fail "a __pycache__ folder was left in the kit"; fi
 # No stray backup or in-progress scan files

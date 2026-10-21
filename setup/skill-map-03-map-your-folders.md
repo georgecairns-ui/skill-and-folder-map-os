@@ -6,7 +6,7 @@ Goal: map the folders they choose and let them see it for the first time.
 
 One plain sentence before you start:
 
-> I'm going to look through some of your folders and build you a map of what's in them. I only read names, sizes and dates, never what's inside a file.
+> I'm going to look through some of your folders and build you a map of what's in them. I only read names, sizes and dates, never what's inside a file. Tidying only happens later, if you press a Fix button.
 
 ## 2. Choose the folders
 

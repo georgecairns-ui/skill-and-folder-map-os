@@ -169,7 +169,7 @@ Switch to the Files lens (the Skills | Files control in the top bar, or the `T` 
 - **Phone width 320 and 375**: on both lenses, the sidebar opens from the menu button, nothing scrolls sideways on any page (Map, All files/skills, Overview, Clean-up/Gaps, Review, Preferences), and the map stage still fits and is still usable by touch.
 - **Reduced motion**: with the OS's reduce-motion setting on, open the Map page on both lenses: the canvas must be completely still, no dots or hubs growing in, no comet-trail pulses, no rotating ring, no automatic turning, no eased zoom or pan. The map still draws, still fits, and clicking, dragging and drilling in and out of folders still work.
 
-## 7. The 5 jobs, with a stand-in `claude`
+## 7. The 6 jobs, with a stand-in `claude`
 
 Point `TLOS_CLAUDE` at a stand-in script that follows the job prompts without using real Claude (see Task List OS's own stand-in for the pattern). For each job, trigger it from the app and check:
 
@@ -197,7 +197,34 @@ Follow `ATTACHING.md` on a scratch copy of Task List OS, then check:
 
 ## 11. Helper: Node and Python behave the same
 
-Run the app once with `node apps/server/server.js` and once with `python3 apps/server/server.py` and repeat the page checks in sections 4 and 5 for each: saving both data files, the job endpoints for all 5 jobs, and the backup files (`skillmap.backup.json` and `filemap.backup.json`) all behave the same in both.
+Run the app once with `node apps/server/server.js` and once with `python3 apps/server/server.py` and repeat the page checks in sections 4 and 5 for each: saving all 3 data files, the job endpoints for all 6 jobs, and the backup files (`skillmap.backup.json` and `filemap.backup.json`) all behave the same in both.
+
+## 12. Tidy-up: script parity and safety checks
+
+**Parity.** Build a fixture home folder with a chosen folder holding duplicates, old downloads, installers, untidy names and a crowded folder, plus a few own skills (and one plugin skill and one toolkit skill), and a `tidy.json` with one queued action of each kind. Make 2 identical copies of the fixture. Run `node apps/skill-map/tidy/tidy.js` on one and `python3 apps/skill-map/tidy/tidy.py` on the other, with the same `SKILLMAP_HOME`, `SKILLMAP_KIT` and `SKILLMAP_NOW` pattern as sections 2 and 3. The resulting `tidy.json` files and the resulting folder trees must match exactly (`cmp` on the JSON, `diff -r` on the trees).
+
+**Refusals** (run each on both scripts; both must refuse the same things and carry on with the rest):
+
+- a `from` path outside the chosen folders
+- a path containing `..`
+- a path reached through a shortcut (symbolic link) that leads out of a chosen folder
+- a file whose size changed since the scan (skipped, with a note)
+- a `to` path outside the same chosen folder (or outside the matching "-archive" folder for a skill)
+- a destination name already taken: the file arrives as "name (2)", nothing is overwritten
+- a move where the name and place are unchanged (skipped)
+- a plugin skill or toolkit skill (refused)
+
+**Dry run.** `--dry-run` prints what it would do and leaves the folders and `tidy.json` exactly as they were (`diff -r` against the untouched copy).
+
+**Undo.** Queue an `undo` action for a finished action: every item goes back to where it was, the original action becomes `undone` (or `partly-undone` if something was in the way), and nothing is lost. Queue the same undo again: it is refused.
+
+**In the app**, with a stand-in `claude` that runs the script when the `tidy-up` job is asked for:
+
+- Press each folder Fix button on the Clean-up page ("Move them out of the way", "Keep one copy of each", "Clear them away", "Give them clearer names", "Sort them out") and each skill button on the Review page ("Keep one copy", "Retire them"). Check the box text says exactly what will happen, that nothing changes until the button in the box is pressed, and that Cancel changes nothing.
+- After confirming: a toast with Undo appears, the action shows under "Tidied so far", and the files are in "Tidied by Claude" (dated sub-folder) or the skill is in its "-archive" folder. Nothing is deleted.
+- Press Undo, from the toast and from "Tidied so far": everything goes back and the entry shows as undone.
+- For the 2 judgement fixes, check the stand-in works out the moves from file names only and fills in the plan before the script runs.
+- Run the folder scan again: the "Tidied by Claude" folders are skipped and do not appear on the map or in the findings.
 
 ## What can't be tested without real Claude and a real computer
 

@@ -15,7 +15,7 @@ What it reads: the NAME, size, type and last-changed date of every file and fold
 in Preferences (settings.roots). It never opens a file, never reads what is inside one, never follows a
 shortcut out of a chosen folder, and never changes, moves or deletes anything.
 
-It skips hidden items (names starting with a dot), node_modules, the Library folder of a home folder and the
+It skips hidden items (names starting with a dot), node_modules, the "Tidied by Claude" folders it makes itself, the Library folder of a home folder and the
 inside of app and photo-library bundles (they show up as one item).
 
 A re-scan keeps the person's settings and the suggestions Claude left.
@@ -48,7 +48,7 @@ DOWNLOAD_DAYS = 90
 LOOSE_FILES = 100
 DEEP_DEPTH = 7
 
-SKIP_DIRS = {"node_modules", "__pycache__", ".git", ".trash", "$recycle.bin", "venv", ".venv"}
+SKIP_DIRS = {"node_modules", "__pycache__", ".git", ".trash", "$recycle.bin", "venv", ".venv", "tidied by claude"}
 BUNDLE_EXT = {".app", ".photoslibrary", ".xcodeproj", ".bundle", ".framework", ".rtfd", ".pages", ".numbers", ".key", ".sketch"}
 TYPES = {
     "document": ["doc", "docx", "pdf", "txt", "md", "rtf", "odt", "pages", "gdoc", "epub"],

@@ -9,7 +9,7 @@ Skill and Folder Map OS is tool 3 of the small business toolkit, built the same 
 - **Skills**: Claude scans the computer for every skill and command Claude can use, draws them as one map, and offers to group them by what they do for the business. Pressing Scan, Group or Review in the app asks Claude to run one of 3 short jobs.
 - **Files**: Claude scans the folders the person chose and draws them as a second map of folders and files, down to each file, with pages for the Clean-up findings and Claude's tidy-up suggestions. Pressing Scan or Review in the Files lens asks Claude to run one of 2 more short jobs.
 
-Skill and Folder Map OS only reads: it never edits, moves, deletes or sends anything, and nothing it scans leaves the person's computer. The tool's own id stays `skill-map`, and its folder stays `apps/skill-map/`, even though the tool and the GitHub repository are both now named Skill and Folder Map OS.
+Scanning, grouping and reviewing only read. A skill, file or folder changes only when the person presses a Fix button and confirms, and then only through the `tidy-up` job, which never deletes anything (every change is a move or a rename) and records each move so it can be undone. Nothing it scans leaves the person's computer. The tool's own id stays `skill-map`, and its folder stays `apps/skill-map/`, even though the tool and the GitHub repository are both now named Skill and Folder Map OS.
 
 `maintainers/BUILD-PROMPT.md` has the brief this tool was built to, including what changed from the original Drive build prompt and what was added when the Files lens was built.
 
@@ -23,7 +23,7 @@ Skill and Folder Map OS only reads: it never edits, moves, deletes or sends anyt
 
 ## The data files
 
-Two data files sit side by side in `apps/skill-map/data/`: `skillmap.json` for the skills map and `filemap.json` for the folder map. Nobody reads or writes the other tool's file.
+Three data files sit side by side in `apps/skill-map/data/`: `skillmap.json` for the skills map, `filemap.json` for the folder map and `tidy.json` for tidy-ups (see "The tidy-up" below). Nobody reads or writes the other tool's file.
 
 ### `apps/skill-map/data/skillmap.json`
 
@@ -58,7 +58,7 @@ The shape is documented at the top of `apps/skill-map/app/files-model.js` and ma
 
 ## The 2 scan pairs: `scan.js`/`scan.py` and `scan-files.js`/`scan-files.py`
 
-Both pairs are zero-dependency, read-only, and **each pair must write byte-identical output** for the same inputs (the parity tests for both are in `maintainers/TESTING.md`).
+Both scan pairs are zero-dependency, read-only, and **each pair must write byte-identical output** for the same inputs (the parity tests for both are in `maintainers/TESTING.md`).
 
 ### `scan/scan.js` and `scan/scan.py` (the skills scan)
 
@@ -111,30 +111,63 @@ Alongside the skills files above, the Files lens has its own small set of files,
 
 `state.lens` in `apps/skill-map/app/app.js` holds `"skills"` or `"files"`, remembered across visits in `localStorage` under the key `smos-lens`. Switching it (the top-bar Skills | Files control, or the `T` key) swaps which model and which set of views every page reads from; every page in the app (Map, All [skills/files], Overview, Clean-up/Gaps, Review) follows the switch, and the other keyboard shortcuts (`S` to scan, `U` to go up a folder) act on whichever lens is current.
 
-## The 5 Claude jobs
+## The 6 Claude jobs
 
 Defined in `apps/skill-map/claude-jobs.json` (the shared job mechanism from `SHARED-V4-CHANGES.md`: the app asks `POST /api/claude/run/skill-map/<job>` with only the job's name; the words Claude follows live in this file, never in the request). Each is also a skill in `.claude/skills/<name>/SKILL.md` so it works the same whether the app triggers it or the person just asks Claude by name.
 
 Skills side:
 - **`scan-my-skills`** (the app's Scan button, and the `S` key, in the Skills lens): run the scan once (Node, falling back to `python3` if Node isn't installed), report the one-line summary, then stop. Changes nothing else in the data file beyond what the scan itself writes.
 - **`group-my-skills`** (the Map page's "Group by what they do" button): for every skill with no area whose `areaBy` isn't `"you"`, read its description, its `SKILL.md` if the description isn't enough, and `context/business.md`, then choose the best existing area key and set `area` + `areaBy: "claude"`. Leaves a skill ungrouped rather than guessing, and never renames or adds an area itself. Tells the person to check the groups and press "It looks right" (which sets `settings.areasApproved`).
-- **`review-my-skills`** (the Review page's "Review my skills" button): reads the whole map and adds up to 8 new suggestions to `recommendations` at a time (never duplicating an open or skipped one): duplicate names (which to keep and why), skills unused in the last `usageDays` (only once `scan.usage.files > 0`, so it never judges a computer with no history), overlapping descriptions worth merging, a missing description worth updating, and an empty area worth a first skill (suggested from that area's `ideas` in `areas-default.json`). Only ever suggests: never edits, moves, renames or deletes a skill. If Task List OS is attached (`apps/installed.json` has an entry with id `task-list`), each new open suggestion is also added as a suggested task there, in Task List OS's own format, carrying `"source": { "tool": "skill-map", "id": "<recommendation id>" }`. If Task List OS isn't attached, it does nothing more.
+- **`review-my-skills`** (the Review page's "Review my skills" button): reads the whole map and adds up to 8 new suggestions to `recommendations` at a time (never duplicating an open or skipped one): duplicate names (which to keep and why), skills unused in the last `usageDays` (only once `scan.usage.files > 0`, so it never judges a computer with no history), overlapping descriptions worth merging, a missing description worth updating, and an empty area worth a first skill (suggested from that area's `ideas` in `areas-default.json`). Only ever suggests: never edits, moves, renames or deletes a skill (a Fix button does that later, through `tidy-up`). If Task List OS is attached (`apps/installed.json` has an entry with id `task-list`), each new open suggestion is also added as a suggested task there, in Task List OS's own format, carrying `"source": { "tool": "skill-map", "id": "<recommendation id>" }`. If Task List OS isn't attached, it does nothing more.
 
 Files side:
 - **`scan-my-folders`** (the app's Scan button, and the `S` key, in the Files lens): run the folder scan once (Node, falling back to `python3`), report the one-line summary, then stop. Nothing else: no suggestions, no opening a file.
-- **`review-my-folders`** (the Clean-up page's "Review my folders" button): reads `findings`, `folders`, `files` and the open or skipped `recommendations` already there, plus `context/business.md` and `context/routines.md` if they exist (so it knows what the business needs to keep), and adds up to 8 new suggestions, in order: duplicates (which copy to keep), old downloads and installers to clear, big untouched files to archive (careful with anything that looks like a contract, tax record or client deliverable), untidy names to rename, and crowded, empty or buried folders to tidy. Only ever suggests: never moves, renames, edits, opens or deletes a file or folder. Same Task List OS hand-off as `review-my-skills`, carrying `"source": { "tool": "skill-map", "id": "<recommendation id>" }`.
+- **`review-my-folders`** (the Clean-up page's "Review my folders" button): reads `findings`, `folders`, `files` and the open or skipped `recommendations` already there, plus `context/business.md` and `context/routines.md` if they exist (so it knows what the business needs to keep), and adds up to 8 new suggestions, in order: duplicates (which copy to keep), old downloads and installers to clear, big untouched files to archive (careful with anything that looks like a contract, tax record or client deliverable), untidy names to rename, and crowded, empty or buried folders to tidy. Only ever suggests: never moves, renames, edits, opens or deletes a file or folder (a Fix button does that later, through `tidy-up`). Same Task List OS hand-off as `review-my-skills`, carrying `"source": { "tool": "skill-map", "id": "<recommendation id>" }`.
+
+### `tidy-up` (the Fix buttons)
+
+The only job that changes anything on the computer. The person presses a Fix button (folders: "Move them out of the way", "Keep one copy of each", "Clear them away", "Give them clearer names", "Sort them out"; skills: "Keep one copy", "Retire them"), reads a plain-English box saying exactly what will happen, and presses the button in it. `tidy-model.js` builds the plan of moves from the scan, and the app queues it as an action in `apps/skill-map/data/tidy.json`. The job (`.claude/skills/tidy-up/SKILL.md`) then runs the script.
+
+## The tidy-up: `tidy/tidy.js` and `tidy/tidy.py`
+
+A script pair, zero-dependency, that must behave identically (parity test in `maintainers/TESTING.md`). `node apps/skill-map/tidy/tidy.js` does everything queued in `tidy.json`; `--dry-run` says what it would do and changes nothing. `tidy.py` takes the same options. Environment overrides for testing: `SKILLMAP_HOME`, `SKILLMAP_KIT`, `SKILLMAP_NOW`.
+
+`tidy.json` is `{ "version": 1, "actions": [] }` and ships empty. Each action has:
+
+| Field | Meaning |
+|---|---|
+| `id` | Unique id for the action |
+| `lens` | `files` or `skills` |
+| `kind` | `archive`, `keep-one`, `empty`, `rename`, `sort`, `retire` or `undo` |
+| `key` | Which finding or recommendation it came from |
+| `title` | The plain-English name shown under "Tidied so far" |
+| `status` | `queued`, `done`, `partly`, `failed`, `undone` or `partly-undone` |
+| `plan` | The moves: `[{ "from", "to", "type", "bytes" }]` |
+| `needsPlan`, `task`, `items` | For the 2 judgement fixes (`rename`, `sort`): Claude reads `task` and `items` (file names only) and fills in `plan` and leaves `needsPlan` as it is (the script only needs a non-empty `plan`) |
+| `results`, `summary`, `finishedAt`, `note` | Written by the script when it finishes |
+| `of` | On an `undo` action, the id of the action being undone |
+
+Safety rules the script enforces, whatever the file says:
+
+- It never deletes anything: every change is a move or a rename.
+- It only touches the folders chosen in Preferences (`settings.roots` of `filemap.json`), or the person's own skill folders. It never touches a skill from a plugin or from this toolkit.
+- Folder fixes land in a "Tidied by Claude" folder inside the same chosen folder, in a dated sub-folder. Retired skills land in a folder beside their own with "-archive" on the end.
+- It refuses a path outside the chosen folders, a path containing `..`, and anything reached through a shortcut. It never overwrites (it adds " (2)"), never opens a file, and skips a file whose size changed since the scan.
+- Undo is another queued action of kind `undo`; the script moves each item back, and refuses to undo the same action twice.
+- The folder scan skips folders called "Tidied by Claude", so tidied files do not show up as new clutter.
+- The two judgement fixes use file names only: Claude works out the moves, the script carries them out.
 
 ## How the release works
 
-`bash maintainers/make-release.sh` from the repo root builds `dist/skill-and-folder-map-os.zip`, a clean copy for a customer to download: it checks every file that ships is still a blank template (see the script's own comments for the exact checks, covering both data files), copies the kit into a folder called "Skill and Folder Map OS" leaving out this `maintainers/` folder and other clutter, runs the same checks again on the copy plus some structural ones (every file that must exist, every JSON file that must parse, no em dash, no banned word, no old name, both scan pairs syntax-check cleanly), then zips it. `dist/` is git-ignored. Publishing itself follows Task List OS and Pipeline OS: a `claude/...` branch from `origin/main`, the release script run and passing, a pull request into `main`, never a direct push or a force push.
+`bash maintainers/make-release.sh` from the repo root builds `dist/skill-and-folder-map-os.zip`, a clean copy for a customer to download: it checks every file that ships is still a blank template (see the script's own comments for the exact checks, covering all 3 data files), copies the kit into a folder called "Skill and Folder Map OS" leaving out this `maintainers/` folder and other clutter, runs the same checks again on the copy plus some structural ones (every file that must exist, every JSON file that must parse, no em dash, no banned word, no old name, both scan pairs syntax-check cleanly), then zips it. `dist/` is git-ignored. Publishing itself follows Task List OS and Pipeline OS: a `claude/...` branch from `origin/main`, the release script run and passing, a pull request into `main`, never a direct push or a force push.
 
 ## Rules
 
 - Same as Task List OS and Pipeline OS: anything committed ships, so never commit a filled-in `context/`, a non-empty `data/skillmap.json` or `data/filemap.json`, a ticked `setup/progress.md`, or "Setup: complete" in `CLAUDE.md`.
 - No prices for Get AI Powers services anywhere, no em dashes, British English, customer-facing words never say agent, repo, repository, artifact, JSON, schema, API or MCP.
 - Neither scan ever guesses a number: every count on screen is worked out in `model.js` or `files-model.js` from the scan's own output.
-- Claude proposes, the person approves: `group-my-skills`, `review-my-skills` and `review-my-folders` only ever suggest; the person approves a group by pressing "It looks right" and a recommendation by marking it Done.
-- Skill and Folder Map OS never edits, moves, deletes or sends anything, anywhere, at any point. It has no email, calendar, call-recording or CRM connection, and needs none.
+- Claude proposes, the person approves: `group-my-skills`, `review-my-skills` and `review-my-folders` only ever suggest; the person approves a group by pressing "It looks right" and a recommendation by marking it Done or pressing its Fix button.
+- Skill and Folder Map OS never deletes or sends anything, anywhere, at any point, and changes (moves or renames) something only when the person presses a Fix button and confirms. It has no email, calendar, call-recording or CRM connection, and needs none.
 
 ## Open questions for George
 
