@@ -20,3 +20,6 @@ desktop.ini
 apps/home/data/
 __pycache__/
 *.pyc
+
+# Photos and videos added to posts: they stay on this computer, never in the kit
+apps/*/data/media/

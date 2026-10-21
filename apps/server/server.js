@@ -8,11 +8,15 @@
        no folder to pick and nothing to allow. Claude's changes appear within seconds.
        If other tools from the toolkit are attached, it saves their data files too, but only the
        ones listed for each tool in apps/installed.json.
+    3. For a tool marked "media": true in apps/installed.json, keeps the photos and videos a person
+       adds to their posts in that tool's own data/media folder, and plays them back.
 
   Safety:
     - It only listens on this computer (127.0.0.1). Nothing on the internet or your network can reach it.
     - It only serves the app (the apps folder) and only ever saves the task file and the data files
       of attached tools listed in apps/installed.json. Nothing else can be written.
+    - Photos and videos are saved only for a tool marked "media": true, only with a safe file name and the
+      right kind of file, up to 200 MB, and never over a file that is already there. Nothing can delete them.
     - It keeps a backup (for example tasks.backup.json) before every save, and saves in a way that
       can't leave a half-written file.
     - It refuses requests from other websites.
@@ -34,6 +38,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { spawn } = require("child_process");
+const { pipeline } = require("stream");
 
 const PORT = Number(process.env.TLOS_PORT || 4747);
 const HOST = "127.0.0.1";
@@ -46,6 +51,12 @@ const BRAIN_DUMP = path.join(APPS, "home", "data", "braindump.json");   // the s
 // A tool's data file must live in its own data folder: apps/<tool>/data/<name>.json
 const DATA_FILE_RE = /^apps\/[a-z0-9-]+\/data\/[a-z0-9-]+\.json$/;
 const MAX_BODY = 10 * 1024 * 1024;
+// Photos and videos: apps/<tool>/data/media/<name>, for a tool marked "media": true in apps/installed.json
+const MEDIA_NAME_RE = /^[a-z0-9][a-z0-9-]{0,60}\.(jpg|jpeg|png|webp|gif|mp4|mov|webm)$/;
+const MEDIA_URL_RE = /^\/api\/media\/([a-z0-9-]+)\/([^/]+)$/;
+const MEDIA_TYPES = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".gif": "image/gif",
+  ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm" };
+const MAX_MEDIA = 200 * 1024 * 1024;
 
 // ---------- Asking Claude to do a small job (sort a voice note, update a deal) ----------
 const AUTO_CLAUDE = (process.env.TLOS_AUTO_CLAUDE || "on") !== "off";
@@ -181,6 +192,57 @@ function dataFileFor(toolId, fileName) {
   return null;
 }
 
+// The folder a tool keeps photos and videos in, or null if that tool isn't installed or isn't marked "media": true
+function mediaDirFor(toolId) {
+  const tool = installedTools().find(function (t) { return t && t.id === toolId; });
+  const app = tool && typeof tool.app === "string" ? tool.app : "";
+  if (!tool || tool.media !== true || !/^apps\/[a-z0-9-]+\/$/.test(app) || app === "apps/shared/" || app === "apps/server/") return null;
+  return path.join(ROOT, ...app.split("/"), "data", "media");
+}
+
+// Saves an upload: checks it, writes it to a temporary file, then swaps it in. Never replaces a file that is there.
+function writeMedia(req, res, dir, name) {
+  const type = (req.headers["content-type"] || "").split(";")[0].trim().toLowerCase();
+  if (type !== MEDIA_TYPES[path.extname(name)]) return sendJson(res, 415, { error: "wrong kind of file" });
+  const length = Number(req.headers["content-length"]);
+  if (!Number.isInteger(length) || length < 1) return sendJson(res, 411, { error: "length needed" });
+  if (length > MAX_MEDIA) return sendJson(res, 413, { error: "too large" });
+  const file = path.join(dir, name), tmp = file + ".saving";
+  if (fs.existsSync(file)) return sendJson(res, 409, { error: "already there" });
+  const failed = function (status, error) { fs.unlink(tmp, function () { sendJson(res, status, { error: error }); }); };
+  try { fs.mkdirSync(dir, { recursive: true }); } catch (e) { return sendJson(res, 500, { error: "save failed" }); }
+  const out = fs.createWriteStream(tmp, { flags: "wx" });
+  pipeline(req, out, function (err) {
+    if (err) return err.code === "EEXIST" ? sendJson(res, 409, { error: "already there" }) : failed(500, "save failed");
+    if (out.bytesWritten !== length) return failed(400, "incomplete");
+    if (fs.existsSync(file)) return failed(409, "already there");
+    try { fs.renameSync(tmp, file); } catch (e) { return failed(500, "save failed"); }
+    return sendJson(res, 201, { file: name });
+  });
+}
+
+// Plays a saved photo or video back. Supports Range requests, which browsers use to play and skip around a video.
+function serveMedia(req, res, dir, name) {
+  const file = path.join(dir, name);
+  let size;
+  try { const stat = fs.statSync(file); size = stat.isFile() ? stat.size : 0; } catch (e) { size = 0; }
+  if (!size) return sendJson(res, 404, { error: "missing" });
+  let start = 0, end = size - 1, status = 200;
+  const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || "");
+  if (range && (range[1] || range[2])) {
+    start = range[1] ? Number(range[1]) : Math.max(0, size - Number(range[2]));
+    if (range[1] && range[2]) end = Math.min(end, Number(range[2]));
+    if (start > end) return send(res, 416, "Range not satisfiable", null, { "Content-Range": "bytes */" + size });
+    status = 206;
+  }
+  const headers = { "Content-Type": MEDIA_TYPES[path.extname(name)], "Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff",
+    "Accept-Ranges": "bytes", "Content-Length": end - start + 1 };
+  if (status === 206) headers["Content-Range"] = "bytes " + start + "-" + end + "/" + size;
+  res.writeHead(status, headers);
+  if (req.method === "HEAD") return res.end();
+  pipeline(fs.createReadStream(file, { start: start, end: end }), res, function () { /* the browser may stop early; nothing to do */ });
+}
+
 function readBody(req) {
   return new Promise(function (resolve, reject) {
     let size = 0;
@@ -246,6 +308,17 @@ async function handleApi(req, res, url) {
     if (m[3] && req.method === "GET") return sendJson(res, 200, { modified: modified(file) });
     if (!m[3] && req.method === "GET") return readFile(res, file);
     if (!m[3] && req.method === "PUT") return writeFile(req, res, file);
+    return sendJson(res, 405, { error: "not allowed" });
+  }
+  // Photos and videos: /api/media/<tool>/<name>. There is no delete.
+  const media = MEDIA_URL_RE.exec(url);
+  if (media) {
+    if (req.method === "PUT" && !originOk(req)) return sendJson(res, 403, { error: "forbidden" });
+    const dir = mediaDirFor(media[1]);
+    if (!dir) return sendJson(res, 404, { error: "not a tool that keeps photos and videos" });
+    if (!MEDIA_NAME_RE.test(media[2])) return sendJson(res, 400, { error: "file name not allowed" });
+    if (req.method === "GET" || req.method === "HEAD") return serveMedia(req, res, dir, media[2]);
+    if (req.method === "PUT") return writeMedia(req, res, dir, media[2]);
     return sendJson(res, 405, { error: "not allowed" });
   }
   if (url === "/api/claude/status" && req.method === "GET") {

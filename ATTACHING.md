@@ -79,6 +79,8 @@ Every tool has one at its root:
 }
 ```
 
+A tool that keeps photos or videos (Content Machine OS) adds `"media": true`. Step 5 below copies it into `apps/installed.json`, and the helper only stores and plays back files for a tool that has it (shared version 7).
+
 ## Attaching: what Claude does
 
 Usually on a call with Get AI Powers (see the menu section above). When the person says "attach the proposal writer", "add the pipeline" or similar, and they're cleared to go ahead, their Claude:
