@@ -29,7 +29,7 @@ Every tool is free. Each one is a way into a conversation with Get AI Powers. So
 | `task-list-os` | Task List OS | `apps/task-list/` | The task list that does itself. Where every tool's actions land |
 | `pipeline-os` | Pipeline OS | `apps/pipeline/` | The pipeline that chases itself: every deal on one board, follow-ups drafted for you |
 | `skill-and-folder-map-os` | Skill and Folder Map OS | `apps/skill-map/` | See everything Claude could take off your plate, mapped across the business |
-| `proposal-writing-os` | Proposal OS | `apps/proposals/` | Put everything about a client in one folder, get a proposal in your brand |
+| `proposal-writing-os` | Proposal Writing OS | `apps/proposals/` | Put everything about a client in one folder, get a proposal in your brand |
 | `content-machine-os` | Content Machine OS | `apps/content/` | A week of posts planned and drafted in your voice |
 | `money-view-os` | Money View OS | `apps/money/` | Cash today and the next 12 weeks, with what's owed to you |
 | `file-finder-os` | File Finder OS | `apps/file-finder/` | Find any document in seconds, and tidy your folders with one click each |
@@ -111,7 +111,7 @@ Detaching works the other way round. The tool's data moves to `files/99-archive/
 | Task List OS | | Receives tasks from every tool |
 | Pipeline OS | People and tasks (Task List OS), proposal status | Tasks: chases due. Proposal writer: "proposal needed" when a deal reaches that stage. Money view: expected income when a deal is won. Content machine: a case study idea when a deal is won |
 | Skill and Folder Map OS | `context/`, which tools are installed (to show what's already covered) | Tasks: build the start-here skills |
-| Proposal OS | Pipeline deals | Tasks: follow up a sent proposal. Pipeline: move the deal's stage when a proposal is sent, won or lost. Money view: expected income when won |
+| Proposal Writing OS | Pipeline deals | Tasks: follow up a sent proposal. Pipeline: move the deal's stage when a proposal is sent, won or lost. Money view: expected income when won |
 | Content Machine OS | Pipeline wins, What's New ideas, `context/voice.md` | Tasks: posts due today |
 | Money View OS | Pipeline and proposal wins, ad spend | Tasks: chase overdue invoices (using the `polite-chaser` skill) |
 | File Finder OS | `files/` and any folders listed in `files/README.md` | Tasks: approved tidy-ups to do. Every tool can link to a file through it |
