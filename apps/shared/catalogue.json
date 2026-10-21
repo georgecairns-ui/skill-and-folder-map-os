@@ -50,14 +50,6 @@
       "repository": "money-view-os"
     },
     {
-      "id": "file-finder",
-      "name": "File Finder OS",
-      "description": "Find any document in seconds by asking for it in plain words. Claude also suggests tidy-ups for your folders, and you approve each one with a click.",
-      "icon": "folder",
-      "app": "apps/file-finder/",
-      "repository": "file-finder-os"
-    },
-    {
       "id": "whats-new",
       "name": "What's New in Claude OS",
       "description": "Claude's latest updates, translated into what they mean for your business. Each one comes with a plain suggestion of what to try, so you never miss something useful.",
