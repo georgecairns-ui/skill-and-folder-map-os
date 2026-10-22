@@ -36,7 +36,7 @@
     {
       "id": "content",
       "name": "Content Machine OS",
-      "description": "A week of posts planned and drafted in your voice. Claude turns your wins, ideas and news into posts, and you approve each one before you post it yourself.",
+      "description": "Plans your posts from what your customers search for and what works for your competitors, drafted in your voice and scored for each platform. You approve every post and post it yourself.",
       "icon": "megaphone",
       "app": "apps/content/",
       "repository": "content-machine-os"
