@@ -46,7 +46,7 @@ If `context/business.md` still says "Status: not filled in yet", skills can't be
 | **http://localhost:4747** | The app. It opens on Home (a dashboard of boxes they arrange themselves), then a Skills \| Files switch at the top (or the T key) moves the whole app between the 2 maps. Skills side: Map (the network, grouped by what a skill is for or where it's from), All skills (the same map as a sortable table), Overview (counts and most-used), Gaps (business areas with no skill, and ideas for one) and Review (your suggestions). Files side: Map (click a folder to go inside it, breadcrumbs and an Up button to go back), All files (a sortable table with a Files/Folders switch), Overview (counts, what it's made of, biggest folders and files), Clean-up (what needs tidying, biggest first, each with See them and Find on the map) and Review (your suggestions, plus the duplicate sets). Preferences (the cog) sits on both sides. The **Brain dump** button at the top (shared by every tool, and on Home) records a voice note or a typed one. A small helper in `apps/server/` runs it on this computer. If it isn't running, use `.claude/skills/open-task-list` |
 | `Open Skill and Folder Map.html` | Double-clicking it goes to the link above when the app is running |
 | `apps/skill-map/` | The skills map and the folder map, in one app. `app/model.js` explains the skills data and `app/files-model.js` the folder data. The skill map is `apps/skill-map/data/skillmap.json`, scanned by `apps/skill-map/scan/scan.js` (or `scan.py`). The folder map is `apps/skill-map/data/filemap.json`, scanned by `apps/skill-map/scan/scan-files.js` (or `scan-files.py`) |
-| `apps/shared/` | The app's look: `theme.css` holds every colour and font. Also the toolkit menu: `catalogue.json` lists all 9 tools and the booking link |
+| `apps/shared/` | The app's look: `theme.css` holds every colour and font. Also the toolkit menu: `catalogue.json` lists all 8 tools and the booking link |
 | `apps/installed.json` | The tools in this folder. The menu and the helper both read it |
 | `context/` | Your notes about the business (see above) |
 | `files/` | Their documents, in numbered folders |
@@ -96,7 +96,7 @@ When you learn something lasting (a new part of the business, a team change, a p
 
 ## Other tools in the toolkit
 
-Skill and Folder Map OS is one of 9 free tools from Get AI Powers. The app's menu shows the others under "More tools" with a padlock. `apps/shared/catalogue.json` lists every tool, what it does and the booking link.
+Skill and Folder Map OS is one of 8 free tools from Get AI Powers. The app's menu shows the others under "More tools" with a padlock. `apps/shared/catalogue.json` lists every tool, what it does and the booking link.
 
 - If they ask about a locked tool, or say they want one: explain what it does in plain words (its description in the catalogue is a good start), say Get AI Powers sets it up with them on a free call, and give them the booking link (`booking.url` in the catalogue). Say it once. Never push it.
 - If they say they're on that call, or that Get AI Powers has told them to go ahead: follow `ATTACHING.md` in this folder to attach the tool.
