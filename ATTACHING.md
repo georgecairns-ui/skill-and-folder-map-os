@@ -33,7 +33,7 @@ Every tool is free. Each one is a way into a conversation with Get AI Powers. So
 | `content-machine-os` | Content Machine OS | `apps/content/` | A week of posts planned and drafted in your voice |
 | `money-view-os` | Money View OS | `apps/money/` | Cash today and the next 12 weeks, with what's owed to you |
 | `whats-new-in-claude-os` | What's New in Claude OS | `apps/whats-new/` | Claude's updates, translated into what they mean for your business |
-| `ads-dashboard-os` | Ads Dashboard OS | `apps/ads/` | Google and Meta ads on one plain-English screen |
+| `ads-os` | Ads OS | `apps/ads/` | Google and Meta ads on one plain-English screen, with campaigns Claude builds and runs once you say yes |
 
 ## Same shape in every tool
 
@@ -116,7 +116,7 @@ Detaching works the other way round. The tool's data moves to `files/99-archive/
 | Content Machine OS | Pipeline wins, What's New ideas, `context/voice.md` | Tasks: posts due today |
 | Money View OS | Pipeline and proposal wins, ad spend | Tasks: chase overdue invoices (using the `polite-chaser` skill) |
 | What's New in Claude OS | `context/tools.md`, which tools are installed | Tasks: things to try. Content machine: updates worth posting about |
-| Ads Dashboard OS | Pipeline (which leads became customers) | Tasks: approved ad changes. Pipeline: new leads as suggested deals. Money view: ad spend as money going out |
+| Ads OS | Pipeline (deals won from ads) | Tasks: approved ad changes, and campaigns waiting to be switched on. Pipeline: new Meta leads as suggested deals. Money view reads ad spend itself, as money going out |
 
 ## The helper and the sidebar
 
