@@ -3,7 +3,7 @@
   "name": "Skill and Folder Map OS",
   "version": "1.0.0",
   "sharedVersion": "6",
-  "attachingVersion": "1",
+  "attachingVersion": "3",
   "app": "apps/skill-map/",
   "dataFiles": [
     "apps/skill-map/data/skillmap.json",
