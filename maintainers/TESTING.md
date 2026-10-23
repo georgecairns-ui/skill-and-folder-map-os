@@ -185,7 +185,7 @@ Build or reuse a large fixture with around 700 skills in the skills data file an
 
 ## 9. Menu and locked-tool panel
 
-As `SHARED-V3-CHANGES.md` section 5 describes: on a scratch copy, the sidebar shows Home, Skill and Folder Map OS as an open dropdown with its pages, and the other 8 tools locked under "More tools" in catalogue order. Folding the dropdown shows the total waiting and the choice is remembered. Each locked tool opens the panel with the right tracking on its button link; Escape and a click outside close it; it works by keyboard and at phone width. `showMoreTools: false` in `catalogue.json` hides the locked tools completely.
+As `SHARED-V3-CHANGES.md` section 5 describes: on a scratch copy, the sidebar shows Home, Skill and Folder Map OS as an open dropdown with its pages, and the other 6 tools locked under "More tools" in catalogue order. Folding the dropdown shows the total waiting and the choice is remembered. Each locked tool opens the panel with the right tracking on its button link; Escape and a click outside close it; it works by keyboard and at phone width. `showMoreTools: false` in `catalogue.json` hides the locked tools completely.
 
 ## 10. Attach to a scratch Task List OS
 

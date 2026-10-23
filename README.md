@@ -6,7 +6,7 @@ Skill and Folder Map OS draws 2 maps on one app, switched with a Skills | Files 
 
 Scanning only reads. Skill and Folder Map OS looks at names, sizes and dates and never opens a file. It changes something only when you press a Fix button and confirm, it never deletes anything, every tidy-up can be undone, and nothing it finds leaves your computer.
 
-Skill and Folder Map OS is part of a toolkit of 8 free tools from Get AI Powers. The others (a task list, Pipeline OS, proposals and more) show in the app's menu, and Get AI Powers sets them up with you on a free call.
+Skill and Folder Map OS is part of a toolkit of 7 free tools from Get AI Powers. The others (a task list, Pipeline OS, proposals and more) show in the app's menu, and Get AI Powers sets them up with you on a free call.
 
 ## What happens when you type /setup
 
