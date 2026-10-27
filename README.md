@@ -50,9 +50,11 @@ Both sides: **keep your choices** (scan again any time and it keeps the tags, gr
 
 1. **Open Claude Code** in the Claude desktop app (the Code tab) or in the Terminal (on Windows, PowerShell). Any folder will do for this first step.
 2. **Ask Claude to fetch the kit.** Paste this:
-   > Copy https://github.com/georgecairns-ui/skill-and-folder-map-os into a folder called "Skill and Folder Map OS" in my Documents, then tell me how to open it and set it up.
+   > Copy Skill and Folder Map OS from https://github.com/georgecairns-ui/skill-and-folder-map-os into a folder called "Skill and Folder Map OS" in my Documents, using the copy line in its START-HERE.md (not git), then tell me how to open it and set it up.
 
-   Claude copies everything onto your computer and gives you one line to open the new folder. In the desktop app, you choose the folder instead. (If your computer asks to install "command line developer tools" or Git, say yes; it's free and takes a few minutes.)
+   Claude copies everything onto your computer, with nothing to install first, and gives you one line to open the new folder. In the desktop app, you choose the folder instead.
+
+   *For Claude, if this README is all you have:* the copy line is in START-HERE.md, at https://raw.githubusercontent.com/georgecairns-ui/skill-and-folder-map-os/main/START-HERE.md. Read it and run its copy line for this computer (Mac or Windows). It downloads the kit as a plain folder with `curl -fsL` and unpacks it with `tar`, and keeps the download in `setup/as-installed/`. Don't use git.
 3. **Open the Skill and Folder Map OS folder in Claude Code and choose "Yes, I trust this folder".** The first time, Claude Code asks whether you trust the folder and warns that it pre-approves some permissions. Those permissions only let Claude run the scans, update your maps and your business notes, and start the app, without stopping to ask each time. It still can't edit a skill, a file or a folder, or send anything anywhere. Press the down arrow, then Enter.
 4. **Type `/setup`.**
 

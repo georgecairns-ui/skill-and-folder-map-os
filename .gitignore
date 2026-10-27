@@ -3,6 +3,7 @@ dist/
 
 # Safety copies the app makes before every save, and the scan's half-written file
 *.backup.json
+*.saving
 apps/skill-map/data/*.tmp-*
 
 # Computer clutter
@@ -20,6 +21,10 @@ desktop.ini
 apps/home/data/
 __pycache__/
 *.pyc
+
+# The saved download of each tool as a customer installed it: theirs, not the kit's
+setup/as-installed/*
+!setup/as-installed/README.md
 
 # Photos and videos added to posts: they stay on this computer, never in the kit
 apps/*/data/media/

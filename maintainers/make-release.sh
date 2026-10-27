@@ -94,6 +94,28 @@ if "Setup: not done yet" not in (root / "CLAUDE.md").read_text():
 for f in sorted((root / "apps").glob("*/data/media/**/*")):
     if f.is_file() and f.name != ".gitkeep":
         problems.append(f"{f.relative_to(root)} is a person's own photo or video and must not ship")
+# A customer's saved download never ships: setup/as-installed/ holds only its README
+for f in sorted((root / "setup/as-installed").rglob("*")):
+    if f.is_file() and f.name not in ("README.md", ".DS_Store"):
+        problems.append(f"{f.relative_to(root)} is a customer's saved download and must not ship")
+# The shared version in toolkit.json must be the one in apps/shared/VERSION
+shared_version = (root / "apps/shared/VERSION").read_text().split()[0]
+toolkit_shared_version = json.loads((root / "toolkit.json").read_text()).get("sharedVersion")
+if str(toolkit_shared_version) != shared_version:
+    problems.append(f"toolkit.json sharedVersion is {toolkit_shared_version!r} but apps/shared/VERSION says {shared_version}: change them together")
+# Shared parts are identical in every tool, so they must not name one. No file may use the old start-up names,
+# and no message in the scripts, the helper or the shared page code may say "Skill and Folder Map OS" (they read the tool's name from toolkit.json)
+skip_dirs = {".git", "dist", "maintainers", "node_modules"}
+for f in sorted(root.rglob("*")):
+    if not f.is_file() or skip_dirs & set(f.relative_to(root).parts) or f.suffix in (".png", ".jpg", ".woff2", ".zip", ".gz", ".ico"):
+        continue
+    txt = f.read_text(errors="ignore")
+    rel = str(f.relative_to(root))
+    for old in ("open-task-list", "start-task-list"):
+        if old in txt:
+            problems.append(f"{rel} uses the old name {old} (it is now open-the-app / start-app, the same in every tool)")
+    if re.match(r"setup/scripts/|apps/server/|apps/shared/js/", rel) and re.search(r"Skill and Folder Map OS|(?<!window\.)TaskListOS", txt):
+        problems.append(f"{rel} names a tool (Skill and Folder Map OS): shared parts read the name from toolkit.json")
 for p in problems:
     print("  - " + p, file=sys.stderr)
 sys.exit(1 if problems else 0)
@@ -102,6 +124,7 @@ PYEOF
 # ---------- 2. Copy, leaving out what customers don't need ----------
 mkdir -p "$OUT" "$DIST"
 rsync -a \
+  --include 'setup/as-installed/README.md' --exclude 'setup/as-installed/*' \
   --exclude '.git' --exclude '.gitignore' --exclude 'dist' --exclude 'maintainers' \
   --exclude '.claude/launch.json' --exclude '.claude/settings.local.json' --exclude '.claude/.cc-writes' \
   --exclude '*.backup.json' --exclude '*.tmp-*' --exclude 'apps/home/data' --exclude '.DS_Store' --exclude '._*' --exclude 'Thumbs.db' --exclude 'desktop.ini' \
@@ -111,7 +134,7 @@ rsync -a \
 find "$OUT" -mindepth 2 -type d -name .claude -empty -prune -exec rm -rf {} +
 
 # ---------- 3. Checks ----------
-for f in "START-HERE.md" "CLAUDE.md" "Open Skill and Folder Map.html" "apps/skill-map/index.html" "apps/skill-map/data/skillmap.json" "apps/skill-map/data/filemap.json" "apps/skill-map/menu.json" "apps/skill-map/home-boxes.js" "apps/skill-map/claude-jobs.json" "apps/skill-map/areas-default.json" "apps/skill-map/scan/scan.js" "apps/skill-map/scan/scan.py" "apps/skill-map/tidy/tidy.js" "apps/skill-map/tidy/tidy.py" "apps/skill-map/data/tidy.json" ".claude/skills/tidy-up/SKILL.md" "apps/skill-map/app/tidy-model.js" "apps/skill-map/scan/scan-files.js" "apps/skill-map/scan/scan-files.py" "apps/skill-map/app/app.js" "apps/skill-map/app/map.js" "apps/skill-map/app/model.js" "apps/skill-map/app/files-model.js" "apps/skill-map/app/view-files.js" "apps/skill-map/app/drawer-files.js" "setup/progress.md" "setup/skill-map-01-first-scan.md" "setup/skill-map-02-group-by-business.md" "setup/skill-map-03-map-your-folders.md" ".claude/skills/README.md" ".claude/settings.json" ".claude/skills/scan-my-skills/SKILL.md" ".claude/skills/group-my-skills/SKILL.md" ".claude/skills/review-my-skills/SKILL.md" ".claude/skills/scan-my-folders/SKILL.md" ".claude/skills/review-my-folders/SKILL.md" "setup/scripts/save-key.sh" "setup/scripts/start-task-list.sh" "apps/server/server.js" "apps/server/server.py" "setup/connections/README.md" "toolkit.json" "ATTACHING.md" "apps/installed.json" "apps/shared/catalogue.json" "apps/shared/VERSION" "apps/shared/sidebar.css" "apps/shared/js/sidebar.js" "apps/shared/js/theme.js" "apps/shared/js/braindump.js" ".claude/skills/sort-brain-dump/SKILL.md" "apps/shared/images/claude-icon.png" "apps/home/index.html" "apps/home/home.js" "apps/home/home.css" "apps/shared/fonts/Figtree-Variable.woff2" "setup/09-check-and-hand-over.md"; do
+for f in "START-HERE.md" "CLAUDE.md" "Open Skill and Folder Map.html" "apps/skill-map/index.html" "apps/skill-map/data/skillmap.json" "apps/skill-map/data/filemap.json" "apps/skill-map/menu.json" "apps/skill-map/home-boxes.js" "apps/skill-map/claude-jobs.json" "apps/skill-map/areas-default.json" "apps/skill-map/scan/scan.js" "apps/skill-map/scan/scan.py" "apps/skill-map/tidy/tidy.js" "apps/skill-map/tidy/tidy.py" "apps/skill-map/data/tidy.json" ".claude/skills/tidy-up/SKILL.md" "apps/skill-map/app/tidy-model.js" "apps/skill-map/scan/scan-files.js" "apps/skill-map/scan/scan-files.py" "apps/skill-map/app/app.js" "apps/skill-map/app/map.js" "apps/skill-map/app/model.js" "apps/skill-map/app/files-model.js" "apps/skill-map/app/view-files.js" "apps/skill-map/app/drawer-files.js" "setup/progress.md" "setup/skill-map-01-first-scan.md" "setup/skill-map-02-group-by-business.md" "setup/skill-map-03-map-your-folders.md" ".claude/skills/README.md" ".claude/settings.json" ".claude/skills/scan-my-skills/SKILL.md" ".claude/skills/group-my-skills/SKILL.md" ".claude/skills/review-my-skills/SKILL.md" ".claude/skills/scan-my-folders/SKILL.md" ".claude/skills/review-my-folders/SKILL.md" "setup/scripts/save-key.sh" "setup/scripts/start-app.sh" "apps/server/server.js" "apps/server/server.py" "setup/connections/README.md" "toolkit.json" "ATTACHING.md" "apps/installed.json" "apps/shared/catalogue.json" "apps/shared/VERSION" "apps/shared/sidebar.css" "apps/shared/js/sidebar.js" "apps/shared/js/theme.js" "apps/shared/js/braindump.js" ".claude/skills/sort-brain-dump/SKILL.md" "apps/shared/images/claude-icon.png" "apps/home/index.html" "apps/home/home.js" "apps/home/home.css" "apps/shared/fonts/Figtree-Variable.woff2" "setup/09-check-and-hand-over.md" ".claude/skills/get-updates/SKILL.md" "setup/as-installed/README.md"; do
   [ -e "$OUT/$f" ] || fail "missing $f"
 done
 for f in apps/skill-map/data/skillmap.json apps/skill-map/data/filemap.json apps/skill-map/data/tidy.json apps/skill-map/menu.json apps/skill-map/claude-jobs.json apps/skill-map/areas-default.json toolkit.json apps/installed.json apps/shared/catalogue.json; do

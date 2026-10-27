@@ -24,6 +24,7 @@ Use the real numbers from your own scans, never this example. Then tell them, br
 
 - **What's empty**, in your own words: which business areas have no skill yet, and what one there could do.
 - **What to do next**: scan again, on either side, whenever they like, and say "review my folders" or "review my skills" about once a month for fresh suggestions.
+- That they can say "get the latest version" any time and you will bring the app up to date, keeping everything of theirs.
 - Their link, **http://localhost:4747/skill-map/**. Bookmark it.
 
 ## 3. A weekly scan (optional)
