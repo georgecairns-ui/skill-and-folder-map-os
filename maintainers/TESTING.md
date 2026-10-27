@@ -214,6 +214,8 @@ Run the app once with `node apps/server/server.js` and once with `python3 apps/s
 - a move where the name and place are unchanged (skipped)
 - a plugin skill or toolkit skill (refused)
 
+**Automated.** `node maintainers/test-tidy-safety.js` runs every refusal above, plus the destination rules (folder moves only into "Tidied by Claude", a rename only in its own folder, a sort only into a sub-folder, a skill only into its archive and only if it sits directly in a skills folder, never the toolkit's own skills), the " (2)" naming of folders with dots, and undo, against both scripts in a temporary folder with spaces and quotes in the names. Both scripts must give the same answers.
+
 **Dry run.** `--dry-run` prints what it would do and leaves the folders and `tidy.json` exactly as they were (`diff -r` against the untouched copy).
 
 **Undo.** Queue an `undo` action for a finished action: every item goes back to where it was, the original action becomes `undone` (or `partly-undone` if something was in the way), and nothing is lost. Queue the same undo again: it is refused.
