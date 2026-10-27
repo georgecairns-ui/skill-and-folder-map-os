@@ -43,7 +43,7 @@ If `context/business.md` still says "Status: not filled in yet", skills can't be
 
 | Folder | What's in it |
 |---|---|
-| **http://localhost:4747** | The app. It opens on Home (a dashboard of boxes they arrange themselves), then a Skills \| Files switch at the top (or the T key) moves the whole app between the 2 maps. Skills side: Map (the network, grouped by what a skill is for or where it's from), All skills (the same map as a sortable table), Overview (counts and most-used), Gaps (business areas with no skill, and ideas for one) and Review (your suggestions). Files side: Map (click a folder to go inside it, breadcrumbs and an Up button to go back), All files (a sortable table with a Files/Folders switch), Overview (counts, what it's made of, biggest folders and files), Clean-up (what needs tidying, biggest first, each with See them and Find on the map) and Review (your suggestions, plus the duplicate sets). Preferences (the cog) sits on both sides. The **Brain dump** button at the top (shared by every tool, and on Home) records a voice note or a typed one. A small helper in `apps/server/` runs it on this computer. If it isn't running, use `.claude/skills/open-task-list` |
+| **http://localhost:4747** | The app. It opens on Home (a dashboard of boxes they arrange themselves), then a Skills \| Files switch at the top (or the T key) moves the whole app between the 2 maps. Skills side: Map (the network, grouped by what a skill is for or where it's from), All skills (the same map as a sortable table), Overview (counts and most-used), Gaps (business areas with no skill, and ideas for one) and Review (your suggestions). Files side: Map (click a folder to go inside it, breadcrumbs and an Up button to go back), All files (a sortable table with a Files/Folders switch), Overview (counts, what it's made of, biggest folders and files), Clean-up (what needs tidying, biggest first, each with See them and Find on the map) and Review (your suggestions, plus the duplicate sets). Preferences (the cog) sits on both sides. The **Brain dump** button at the top (shared by every tool, and on Home) records a voice note or a typed one. A small helper in `apps/server/` runs it on this computer. If it isn't running, use `.claude/skills/open-the-app` |
 | `Open Skill and Folder Map.html` | Double-clicking it goes to the link above when the app is running |
 | `apps/skill-map/` | The skills map and the folder map, in one app. `app/model.js` explains the skills data and `app/files-model.js` the folder data. The skill map is `apps/skill-map/data/skillmap.json`, scanned by `apps/skill-map/scan/scan.js` (or `scan.py`). The folder map is `apps/skill-map/data/filemap.json`, scanned by `apps/skill-map/scan/scan-files.js` (or `scan-files.py`) |
 | `apps/shared/` | The app's look: `theme.css` holds every colour and font. Also the toolkit menu: `catalogue.json` lists all 7 tools and the booking link |
@@ -67,7 +67,7 @@ When a request matches a skill in `.claude/skills/`, read that skill's `SKILL.md
 | "Scan my folders", "map my files", "what's in my folders?" | `.claude/skills/scan-my-folders` |
 | "Review my folders", "what should I tidy?", "clean up my files", "what's taking up space?" | `.claude/skills/review-my-folders` |
 | They pressed a Fix button, or "tidy up what I asked for" | `.claude/skills/tidy-up` |
-| "Open my map", "it's not loading" | `.claude/skills/open-task-list` (it starts the app for every tool in this folder) |
+| "Open my map", "open the app", "it's not loading" | `.claude/skills/open-the-app` (it starts the app for every tool in this folder) |
 | "Sort my brain dump", a messy note (and every note from the Brain dump button) | `.claude/skills/sort-brain-dump` (shared by every tool) |
 | "Make this sound less robotic", any text you write | `.claude/skills/human-email` |
 | "Write it like me", "learn how I write" | `.claude/skills/write-like-me` |
@@ -76,6 +76,7 @@ When a request matches a skill in `.claude/skills/`, read that skill's `SKILL.md
 | "Set me up", "carry on setting up" | `.claude/skills/setup` |
 | "Connect my..." | `.claude/skills/connect-a-tool` |
 | "Make it match my brand", "use our colours", "put our logo on it" | `.claude/skills/match-my-brand` |
+| "Get the latest version", "any updates?", "update the app" | `.claude/skills/get-updates` |
 | They mention a new service, a new kind of customer, a team change | `.claude/skills/keep-context-fresh` |
 
 Any text you draft for them follows `.claude/skills/human-email` and uses `context/voice.md`.
