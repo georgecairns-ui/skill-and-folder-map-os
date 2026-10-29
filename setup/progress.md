@@ -4,6 +4,8 @@ Claude ticks each step when it's done and adds a short note, so setup can pick u
 
 Setup status: not started
 
+Guide mode: not asked yet
+
 - [ ] 1. The first scan
 - [ ] 2. Map your folders
 - [ ] 3. Get to know the business (and make the app look like it)

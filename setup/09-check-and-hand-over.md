@@ -33,7 +33,12 @@ Only offer this if they want it, and only as a scheduled routine with the same "
 
 > Want me to scan again automatically once a week, so both maps stay current without you asking? I'd only ever suggest changes; nothing gets touched without you.
 
-If they say yes, set it up as a scheduled task the same way the other tools in this toolkit do, and note it in `setup/progress.md`.
+If they say no, note it in `setup/progress.md` ("Weekly scan: said no"), tell them they can say "scan my skills" or "scan my folders" any time, and go on to section 4. If they say yes:
+
+1. **Agree the day and time**, for example "Monday at 8am". Say plainly: "It uses a little of your Claude allowance each time, and it only runs while your computer is on and the Claude app is open."
+2. **Create it from this session, in this folder:** a scheduled task runs in the folder it was made in. The tools for this are often not loaded yet: search your tools for them first. Look with `list_scheduled_tasks` for an existing weekly scan for this folder, and update it rather than making another. If there isn't one, create it with `create_scheduled_task`, with the title "Weekly scan" and this prompt, filling in this folder's full path: `In <full path of this folder>, run the weekly scan: follow .claude/skills/scan-my-skills/SKILL.md, then .claude/skills/scan-my-folders/SKILL.md. Never send anything except emails the person has already approved in the app; apart from those, never reply, forward, delete, archive, label, pay or post anything.` Only ever one weekly scan task for this folder.
+3. **Run it once now** (`run_scheduled_task`) and check it finished (`list_task_runs`). Then look up that run's session (for example `get_session` with the run's session id) and check 2 things. It ran in this folder: if not, update the task's prompt so it opens with this folder's full path and run it again; if it still runs elsewhere, tell them plainly and leave scanning to "scan my skills" and "scan my folders". It didn't run in an Auto or Bypass permission mode: if it did, tell them "This session is set to act without asking, so the scan would too", ask them to switch this session to the normal permission mode, then delete that task and create it again from this session.
+4. Note the day and time in `setup/progress.md`.
 
 ## 4. Mark setup complete
 

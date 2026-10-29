@@ -10,7 +10,7 @@ Skill and Folder Map OS is part of a toolkit of 7 free tools from Get AI Powers.
 
 ## What happens when you type /setup
 
-You copy the kit, open it in Claude Code and type **/setup**. In about 20 minutes, Claude:
+You copy the kit, open it in the Claude desktop app (the Code tab) and type **/setup**. In about 20 minutes, Claude:
 
 - **Scans your computer for skills.** Every skill in your own Claude setup, in this toolkit, and in every plugin you've installed, found in one pass and drawn as a map, and opens the app.
 - **Scans the folders you choose.** Names, sizes and dates only, for a map of your folders and files.
@@ -42,21 +42,21 @@ Both sides: **keep your choices** (scan again any time and it keeps the tags, gr
 
 ## What you need
 
-- **Access to Skill and Folder Map OS.** It's private: Get AI Powers invites your GitHub account. Accept the invitation from the email GitHub sends you. (No GitHub account? Make a free one at github.com and send Get AI Powers your username.)
-- **Claude Code**, signed in with a paid Claude plan (Pro or Max). The Claude desktop app works too.
+- **The Claude desktop app** (setup runs in its Code tab).
+- **A paid Claude plan (Pro or Max)**, signed in to the desktop app.
 - Nothing else to install in most cases. The app runs on your own computer using Node (Claude installs it for you if it's missing, with your permission). If there's no Node, both scans work with Python 3 instead.
 - About 20 minutes, once.
 
 ## Get started
 
-1. **Open Claude Code** in the Claude desktop app (the Code tab) or in the Terminal (on Windows, PowerShell). Any folder will do for this first step.
+1. **Open the Claude desktop app and choose the Code tab.** Any folder will do for this first step.
 2. **Ask Claude to fetch the kit.** Paste this:
-   > Copy Skill and Folder Map OS from https://github.com/georgecairns-ui/skill-and-folder-map-os into a folder called "Skill and Folder Map OS" in my Documents, using the copy line in its START-HERE.md (not git), then tell me how to open it and set it up. Help me sign in to GitHub first if I need to.
+   > Copy Skill and Folder Map OS from https://github.com/georgecairns-ui/skill-and-folder-map-os into a folder called "Skill and Folder Map OS" in my Documents, using the copy line in its START-HERE.md (not git), then tell me how to open it and set it up.
 
-   Claude checks you're signed in to GitHub (if not, it gives you one line that opens GitHub in your browser to approve this computer), copies everything onto your computer and gives you one line to open the new folder. In the desktop app, you choose the folder instead.
+   Claude copies everything onto your computer and tells you how to open the new folder. In the desktop app, you choose the folder in the Code tab.
 
-   *For Claude, if this README is all you have:* the copy steps are in START-HERE.md. Read it with the person's GitHub sign-in, `gh api repos/georgecairns-ui/skill-and-folder-map-os/contents/START-HERE.md -H "Accept: application/vnd.github.raw"`, and follow its copy steps for this computer (Mac or Windows). They check the GitHub sign-in with `gh`, download the kit as a plain folder with `curl -fsSL` and unpack it with `tar`, and keep the download in `setup/as-installed/`. Don't use git.
-3. **Open the Skill and Folder Map OS folder in Claude Code and choose "Yes, I trust this folder".** The first time, Claude Code asks whether you trust the folder and warns that it pre-approves some permissions. Those permissions only let Claude run the scans, update your maps and your business notes, and start the app, without stopping to ask each time. It still can't edit a skill, a file or a folder, or send anything anywhere. Press the down arrow, then Enter.
+   *For Claude, if this README is all you have:* read START-HERE.md on the repository page at https://github.com/georgecairns-ui/skill-and-folder-map-os, then copy the folder with the Mac or Windows line in it.
+3. **In the Code tab, choose the Skill and Folder Map OS folder and pick "Yes, I trust this folder".** The first time, the app asks whether you trust the folder and warns that it pre-approves some permissions. Those permissions only let Claude run the scans, update your maps and your business notes, and start the app, without stopping to ask each time. It still can't edit a skill, a file or a folder, or send anything anywhere.
 4. **Type `/setup`.**
 
 Then it opens your map and gives you its link, **http://localhost:4747**. Bookmark it.
@@ -94,9 +94,9 @@ toolkit.json           what this tool is, for attaching it to the others in the 
 ATTACHING.md           how the toolkit's tools attach to each other
 CLAUDE.md              Claude's standing instructions in this folder
 Open Skill and Folder Map.html    double-click to open your map (or use the link Claude gives you)
-setup/                 the 5 setup steps and the key scripts
+setup/                 the 5 setup steps
 context/               Claude's notes about your business
-.claude/skills/        saved know-how; each one also works as a command in Claude Code
+.claude/skills/        saved know-how; each one also works as a command in Claude
 files/                 your business documents, in numbered folders
 apps/                  the app and its look (theme.css); apps/skill-map/scan/scan-files.js and
                         scan-files.py scan your folders; apps/skill-map/data/filemap.json is
