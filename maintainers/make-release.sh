@@ -111,8 +111,29 @@ for f in sorted(root.rglob("*")):
         continue
     txt = f.read_text(errors="ignore")
     rel = str(f.relative_to(root))
-    if "archive/refs/heads" in txt or "raw.githubusercontent.com" in txt:
-        problems.append(f"{rel} uses an old public download address: since shared version 12 every download uses the person's GitHub sign-in (gh)")
+    if "raw.githubusercontent.com" in txt:
+        problems.append(f"{rel} uses raw.githubusercontent.com: read files from the downloaded copy instead")
+    # Shared version 13: setup never gives up on a connection, never asks what's on screen, and never uses keys or GitHub sign-in
+    v13_scope = rel == "START-HERE.md" or rel == "README.md" or rel.startswith("setup/") or rel.startswith(".claude/skills/connect-a-tool/") or rel.startswith(".claude/skills/get-updates/")
+    # The give-up checks apply only to the files that connect apps (elsewhere "move on" or "skip it" is harmless)
+    connect_scope = (re.fullmatch(r"setup/0[2-4][^/]*\.md", rel) or re.fullmatch(r"setup/[^/]*(connect|check-ins|make-it-automatic)[^/]*\.md", rel)
+                     or re.fullmatch(r"setup/connections/[^/]+\.md", rel) or rel.startswith(".claude/skills/connect-a-tool/"))
+    if v13_scope and f.suffix == ".md" and rel != "setup/connections/xero-drafts.md":
+        give_up = (
+            (r"and (move|carry) on\b(?! (from|setting up))", "lets Claude give up on a step"),
+            (r"\bthen move on\b", "lets Claude give up on a step"),
+            (r"\bskip it\b", "lets Claude give up on a step"),
+            (r"try once more", "lets Claude give up on a connection"),
+            (r"ask (the person |them )?what they (actually |can )?see", "asks the person what's on screen: Claude checks the connection status itself"),
+        ) if connect_scope else ()
+        for pattern, why in give_up + (
+            (r"Route 2: API key", "offers an API key route"),
+            (r"claude mcp add", "adds a server outside Claude's Connectors screen"),
+            (r"save-key", "asks for a key"),
+            (r"\bgh (auth|api|repo)\b", "needs a GitHub sign-in while the tools are public"),
+        ):
+            if re.search(pattern, txt, re.I):
+                problems.append(f"{rel} {why} (shared version 13): matched {pattern!r}")
     for old in ("open-task-list", "start-task-list"):
         if old in txt:
             problems.append(f"{rel} uses the old name {old} (it is now open-the-app / start-app, the same in every tool)")
@@ -136,7 +157,7 @@ rsync -a \
 find "$OUT" -mindepth 2 -type d -name .claude -empty -prune -exec rm -rf {} +
 
 # ---------- 3. Checks ----------
-for f in "START-HERE.md" "CLAUDE.md" "Open Skill and Folder Map.html" "apps/skill-map/index.html" "apps/skill-map/data/skillmap.json" "apps/skill-map/data/filemap.json" "apps/skill-map/menu.json" "apps/skill-map/home-boxes.js" "apps/skill-map/claude-jobs.json" "apps/skill-map/areas-default.json" "apps/skill-map/scan/scan.js" "apps/skill-map/scan/scan.py" "apps/skill-map/tidy/tidy.js" "apps/skill-map/tidy/tidy.py" "apps/skill-map/data/tidy.json" ".claude/skills/tidy-up/SKILL.md" "apps/skill-map/app/tidy-model.js" "apps/skill-map/scan/scan-files.js" "apps/skill-map/scan/scan-files.py" "apps/skill-map/app/app.js" "apps/skill-map/app/map.js" "apps/skill-map/app/model.js" "apps/skill-map/app/files-model.js" "apps/skill-map/app/view-files.js" "apps/skill-map/app/drawer-files.js" "setup/progress.md" "setup/skill-map-01-first-scan.md" "setup/skill-map-02-group-by-business.md" "setup/skill-map-03-map-your-folders.md" ".claude/skills/README.md" ".claude/settings.json" ".claude/skills/scan-my-skills/SKILL.md" ".claude/skills/group-my-skills/SKILL.md" ".claude/skills/review-my-skills/SKILL.md" ".claude/skills/scan-my-folders/SKILL.md" ".claude/skills/review-my-folders/SKILL.md" "setup/scripts/save-key.sh" "setup/scripts/start-app.sh" "apps/server/server.js" "apps/server/server.py" "setup/connections/README.md" "toolkit.json" "ATTACHING.md" "apps/installed.json" "apps/shared/catalogue.json" "apps/shared/VERSION" "apps/shared/sidebar.css" "apps/shared/js/sidebar.js" "apps/shared/js/theme.js" "apps/shared/js/braindump.js" ".claude/skills/sort-brain-dump/SKILL.md" "apps/shared/images/claude-icon.png" "apps/home/index.html" "apps/home/home.js" "apps/home/home.css" "apps/shared/fonts/Figtree-Variable.woff2" "setup/09-check-and-hand-over.md" ".claude/skills/get-updates/SKILL.md" "setup/as-installed/README.md"; do
+for f in "START-HERE.md" "CLAUDE.md" "Open Skill and Folder Map.html" "apps/skill-map/index.html" "apps/skill-map/data/skillmap.json" "apps/skill-map/data/filemap.json" "apps/skill-map/menu.json" "apps/skill-map/home-boxes.js" "apps/skill-map/claude-jobs.json" "apps/skill-map/areas-default.json" "apps/skill-map/scan/scan.js" "apps/skill-map/scan/scan.py" "apps/skill-map/tidy/tidy.js" "apps/skill-map/tidy/tidy.py" "apps/skill-map/data/tidy.json" ".claude/skills/tidy-up/SKILL.md" "apps/skill-map/app/tidy-model.js" "apps/skill-map/scan/scan-files.js" "apps/skill-map/scan/scan-files.py" "apps/skill-map/app/app.js" "apps/skill-map/app/map.js" "apps/skill-map/app/model.js" "apps/skill-map/app/files-model.js" "apps/skill-map/app/view-files.js" "apps/skill-map/app/drawer-files.js" "setup/progress.md" "setup/skill-map-01-first-scan.md" "setup/skill-map-02-group-by-business.md" "setup/skill-map-03-map-your-folders.md" ".claude/skills/README.md" ".claude/settings.json" ".claude/skills/scan-my-skills/SKILL.md" ".claude/skills/group-my-skills/SKILL.md" ".claude/skills/review-my-skills/SKILL.md" ".claude/skills/scan-my-folders/SKILL.md" ".claude/skills/review-my-folders/SKILL.md" "setup/scripts/save-key.sh" "setup/scripts/start-app.sh" "apps/server/server.js" "apps/server/server.py" "setup/connections/README.md" "toolkit.json" "ATTACHING.md" "apps/installed.json" "apps/shared/catalogue.json" "apps/shared/VERSION" "apps/shared/sidebar.css" "apps/shared/js/sidebar.js" "apps/shared/js/theme.js" "apps/shared/js/braindump.js" "apps/shared/js/connections.js" "apps/shared/js/connections-box.js" ".claude/skills/sort-brain-dump/SKILL.md" "apps/shared/images/claude-icon.png" "apps/home/index.html" "apps/home/home.js" "apps/home/home.css" "apps/shared/fonts/Figtree-Variable.woff2" "setup/09-check-and-hand-over.md" ".claude/skills/get-updates/SKILL.md" "setup/as-installed/README.md"; do
   [ -e "$OUT/$f" ] || fail "missing $f"
 done
 for f in apps/skill-map/data/skillmap.json apps/skill-map/data/filemap.json apps/skill-map/data/tidy.json apps/skill-map/menu.json apps/skill-map/claude-jobs.json apps/skill-map/areas-default.json toolkit.json apps/installed.json apps/shared/catalogue.json; do
